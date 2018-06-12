@@ -36,9 +36,8 @@ graph.levels <- function(g, root="00"){
 	depth.G <- -depth.G  
 	levels <- vector(mode="list", length=max(depth.G)+1);
 	names(levels) <- paste(rep("level", max(depth.G)+1), 0:max(depth.G), sep="_");
-	for(i in 1:(max(depth.G)+1)){
-		levels[[i]] <- names(which(depth.G==i-1));  
-	}
+	for(i in 1:(max(depth.G)+1))
+		levels[[i]] <- names(which(depth.G==i-1));
 	return(levels);
 }
 
@@ -58,14 +57,12 @@ compute.flipped.graph <- function(g){
 		children <- ed[[i]];
 		parent   <- names(ed[i]);
 		if(length(children)!=0){
-			for(j in 1:length(children)){
+			for(j in 1:length(children))
 				ndL[[children[j]]] <- c(ndL[[children[j]]],parent); 
-			}
 		}
 	}
-	for (i in 1:length(ndL)){
+	for (i in 1:length(ndL))
 		ndL[[i]] <- list(edges=ndL[[i]]);
-	}
 	og <- graphNEL(nodes=nodes(g), edgeL=ndL, edgemode="directed");
 	return(og);
 }
@@ -108,9 +105,8 @@ get.parents <- function(g, root="00"){
 		children <- ed[[i]];
 		parent   <- names(ed[i]);
 		if(length(children)!=0){
-			for(j in 1:length(children)){
+			for(j in 1:length(children))
 				ndL[[children[j]]] <- c(ndL[[children[j]]],parent); 
-			}
 		}
 	}
 	ndL <- ndL[-which(names(ndL)==root)]; 
@@ -134,9 +130,8 @@ get.parents.top.down <- function(g,levels, root="00"){
 		children <- ed[[i]];
 		parent   <- names(ed[i]);
 		if(length(children)!=0){
-			for(j in 1:length(children)){
+			for(j in 1:length(children))
 				ndL[[children[j]]] <- c(ndL[[children[j]]],parent); 
-			}
 		}
 	}
 	ndL <- ndL[-which(names(ndL)==root)]; 
@@ -160,9 +155,8 @@ get.parents.bottom.up <- function(g,levels, root="00"){
 		children <- ed[[i]];
 		parent   <- names(ed[i]);
 		if(length(children)!=0){
-			for(j in 1:length(children)){
+			for(j in 1:length(children))
 				ndL[[children[j]]] <- c(ndL[[children[j]]],parent); 
-			}
 		}
 	}
 	ndL <- ndL[-which(names(ndL)==root)]; 
@@ -186,9 +180,8 @@ get.parents.topological.sorting <- function(g, root="00"){
 		children <- ed[[i]];
 		parent   <- names(ed[i]);
 		if(length(children)!=0){
-			for(j in 1:length(children)){
+			for(j in 1:length(children))
 				ndL[[children[j]]] <- c(ndL[[children[j]]],parent); 
-			}
 		}
 	}
 	ndL <- ndL[-which(names(ndL)==root)]; 
@@ -221,9 +214,8 @@ build.descendants <- function(g){
 	name.nodes <- nodes(g);
 	g2 <- transitive.closure(g);
 	desc <- edges(g2);
-	for(x in name.nodes){
+	for(x in name.nodes)
 		desc[[x]] <- c(desc[[x]],x);
-	}
 	return(desc);
 }
 
@@ -236,9 +228,8 @@ build.descendants.per.level <- function(g,levels){
 	ord.nd <- unlist(levels);
 	g2 <- transitive.closure(g);
 	desc <- edges(g2)[ord.nd];
-	for(x in ord.nd){
+	for(x in ord.nd)
 		desc[[x]] <- c(desc[[x]],x);
-	}
 	return(desc);
 }
 
@@ -334,9 +325,8 @@ build.ancestors <- function(g){
 	names.nodes <- nodes(og);
 	og2 <- transitive.closure(og);
 	anc <- edges(og2);
-	for(x in names.nodes){
+	for(x in names.nodes)
 		anc[[x]] <- c(anc[[x]],x);
-	}
 	return(anc);
 }
 
@@ -778,10 +768,8 @@ do.submatrix <- function(hpo.ann,n){
 do.subgraph <- function(nd, g, edgemode="directed"){
 	ed <- edges(g);
 	ed.sel <- ed[nd];
-
 	ndL <- vector(mode="list", length=length(ed.sel));
 	names(ndL) <- names(ed.sel);
-
 	for(i in 1:length(ed.sel)){ 
 		parent   <- names(ed.sel[i]);
 		children <- ed.sel[[i]];
@@ -790,11 +778,8 @@ do.subgraph <- function(nd, g, edgemode="directed"){
 			ndL[[i]] <- append(ndL[[i]],children.map);
 		} 
 	}
-
-	for (i in 1:length(ndL)){
+	for (i in 1:length(ndL))
 		ndL[[i]] <- list(edges=ndL[[i]]);
-	}
-
 	G <- graphNEL(nodes=nd, edgeL=ndL, edgemode=edgemode);
 	return(G);
 }
@@ -818,7 +803,6 @@ check.annotation.matrix.integrity <- function(anc, ann.spec, hpo.ann){
 	## construction of annotation list
 	ann.list <- specific.annotation.list(ann.spec);
 	genes <- rownames(hpo.ann);
-
 	check <- c();
 	for (i in genes){
 		spec.ann <- which(hpo.ann[i,]==1);
@@ -834,7 +818,6 @@ check.annotation.matrix.integrity <- function(anc, ann.spec, hpo.ann){
 		}
 	}
 	names(check) <- genes;
-
 	violated <- any(check!="OK");
 	if(violated){
 		n <- names(check)[check=="NOTOK"];
@@ -971,14 +954,15 @@ check.hierarchy <- function(S.hier,g, root="00"){
 #' @param S matrix of the flat scores. It must be a named matrix, where rows are example (e.g. genes) and columns are classes/terms (e.g. HPO terms)
 #' @param kk number of folds in which to split the dataset (\code{def. k=5})
 #' @param seed seed for the random generator. If \code{NULL} (def.) no initialization is performed
-#' @return a list with \eqn{k=kk} components (folds). Each component of the list is a character vector contains the names of the examples.
+#' @return a list with \eqn{k=kk} components (folds). Each component of the list is a character vector contains the index of the examples, i.e. the 
+#' index of the rows of the matrix S
 #' @export
 #' @examples
 #' data(scores);
-# folds <- do.unstratified.cv.data(S, kk=5, seed=23);
+#' foldIndex <- do.unstratified.cv.data(S, kk=5, seed=23);
 do.unstratified.cv.data <- function(S, kk=5, seed=NULL){
 	set.seed(seed);
-	examples <- rownames(S);
+	examples <- 1:nrow(S);
 	n <- nrow(S);
 	size <- c();
 	folds <- vector(mode="list", length=kk)
@@ -1026,12 +1010,10 @@ do.unstratified.cv.data <- function(S, kk=5, seed=NULL){
 #' @export
 do.stratified.cv.data.single.class <- function(examples, positives, kk=5, seed=NULL){
 	set.seed(seed);
-	if(is.numeric(examples) && length(names(positives))!=0){
+	if(is.numeric(examples) && length(names(positives))!=0)
 		positives <- unname(positives);
-	}
-	if(is.character(examples) && length(names(positives))!=0){
+	if(is.character(examples) && length(names(positives))!=0)
 		positives <- names(positives);
-	}
 	if(length(positives)==1){
 		positives <- positives;
 	}else{

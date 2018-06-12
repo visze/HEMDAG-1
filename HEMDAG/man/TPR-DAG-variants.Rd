@@ -5,7 +5,7 @@
 \alias{TPR.DAG}
 \title{TPR-DAG Variants}
 \usage{
-TPR.DAG(S, g, root = "00", positives = "children",
+TPR.DAG(S, g, root = "00", positive = "children",
   bottomup = "threshold.free", t = 0, w = 0)
 }
 \arguments{
@@ -13,27 +13,26 @@ TPR.DAG(S, g, root = "00", positives = "children",
 
 \item{g}{a graph of class \code{graphNEL}. It represents the hierarchy of the classes}
 
-\item{root}{name of the class that it is on the top-level of the hierarchy (def. \code{root="00"})}
+\item{root}{name of the class that it is on the top-level of the hierarchy (\code{def. root="00"})}
 
-\item{positives}{choice of the \emph{positive} nodes to be considered in the bottom-up strategy. Can be one of the following values:
+\item{positive}{choice of the \emph{positive} nodes to be considered in the bottom-up strategy. Can be one of the following values:
 \itemize{
-    \item \code{children}: for each node are considered its positive children (\code{def.});
+    \item \code{children} (\code{def.}): for each node are considered its positive children;
     \item \code{descendants}: for each node are considered its positive descendants;
 }}
 
 \item{bottomup}{strategy to enhance the flat predictions by propagating the positive predictions from leaves to root. 
 It can be one of the following values:
 \itemize{
-    \item \code{threshold.free}: positive nodes are selected on the basis of the \code{threshold.free} strategy (\code{def.});
+    \item \code{threshold.free} (\code{def.}): positive nodes are selected on the basis of the \code{threshold.free} strategy (\code{def.});
     \item \code{threshold}: positive nodes are selected on the basis of the \code{threshold} strategy;
     \item \code{weighted.threshold.free}: positive nodes are selected on the basis of the \code{weighted.threshold.free} strategy;
     \item \code{weighted.threshold}: positive nodes are selected on the basis of the \code{weighted.threshold} strategy;
     \item \code{tau}: positive nodes are selected on the basis of the \code{tau} strategy. 
-NOTE: \code{tau} is only a \code{DESCENS} variants. If you use \code{tau} strategy you must set the parameter \code{positives} 
-to \code{descendants};
+NOTE: \code{tau} is only a \code{DESCENS} variants. If you use \code{tau} strategy you must set the parameter \code{positive=descendants};
 }}
 
-\item{t}{threshold for the choice of positive nodes (def. \code{t=0.5}). Set \code{t} only for the variants that requiring 
+\item{t}{threshold for the choice of positive nodes (\code{def. t=0.5}). Set \code{t} only for the variants that requiring 
 a threshold for the selection of the positive nodes, otherwise set \code{t} to zero}
 
 \item{w}{weight to balance between the contribution of the node \eqn{i} and that of its positive nodes. Set \code{w} only for the
@@ -43,14 +42,14 @@ a threshold for the selection of the positive nodes, otherwise set \code{t} to z
 a named matrix with the scores of the classes corrected according to the chosen algorithm
 }
 \description{
-\code{TPR-DAG} is a user-friendly function gathering all the hierarchical ensemble algorithms
+Function gathering several hierarchical ensemble algorithms
 }
 \examples{
 data(graph);
 data(scores);
 data(labels);
 root <- root.node(g);
-S.hier <- TPR.DAG(S, g, root, positives="children", bottomup="threshold.free", t=0, w=0);
+S.hier <- TPR.DAG(S, g, root, positive="children", bottomup="threshold.free", t=0, w=0);
 }
 \seealso{
 \code{\link{TPR-DAG}}, \code{\link{DESCENS}}, \code{\link{HTD-DAG}}

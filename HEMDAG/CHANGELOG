@@ -1,3 +1,20 @@
+HEMDAG 2.1.2
+---------------------------------------------------------------------
+NEW FEATURES
+* Improved performance metrics:
+	- added compute.Fmeasure.multilabel;
+	- added PXR.at.multiple.recall.levels.over.classes;
+	- all the performance metrics (AUPRC, AUROC, FMM, PXR) can be computed
+		either one-shot or averaged across folds;
+
+* Improved the high-level hierarchical ensemble functions:
+	- embedded the new performance metric functions;
+	- added the parameter 'metric': maximization by FMAX or PRC (see doc for further details)
+	- added some checkers (warning/stop messages) to make the library more user-friendly;
+
+CHANGES
+* Manual Improved;
+
 HEMDAG 2.0.1
 ---------------------------------------------------------------------
 CHANGES
@@ -35,7 +52,7 @@ NEW FEATURES
 	of the new high level function 'Do.TPR.DAG.holdout';
 
 CHANGES
-* Improved Manual;
+* Manual Improved;
 	
 HEMDAG 1.1.1
 ---------------------------------------------------------------------
@@ -45,7 +62,7 @@ NEW FEATURES
 * Added tupla.matrix function;
 
 CHANGES
-* Improved Manual;
+* Manual Improved;
 * Added link to the GitHub repository HPOparser;
 * Added CITATION file;
 

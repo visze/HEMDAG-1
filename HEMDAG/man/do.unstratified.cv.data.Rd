@@ -14,7 +14,8 @@ do.unstratified.cv.data(S, kk = 5, seed = NULL)
 \item{seed}{seed for the random generator. If \code{NULL} (def.) no initialization is performed}
 }
 \value{
-a list with \eqn{k=kk} components (folds). Each component of the list is a character vector contains the names of the examples.
+a list with \eqn{k=kk} components (folds). Each component of the list is a character vector contains the index of the examples, i.e. the 
+index of the rows of the matrix S
 }
 \description{
 This function splits a dataset in k-fold in an unstratified way (that is a fold may not have an equal amount of positive and 
@@ -23,4 +24,5 @@ splitting dataset in a stratified way is not needed.
 }
 \examples{
 data(scores);
+foldIndex <- do.unstratified.cv.data(S, kk=5, seed=23);
 }

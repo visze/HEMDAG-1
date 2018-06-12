@@ -1,7 +1,6 @@
 ##*********##
 ## TPR-DAG ##
 ##*********##
-
 #' @name TPR-DAG
 #' @aliases tpr.threshold
 #' @aliases tpr.threshold.free
@@ -72,13 +71,18 @@
 #' @rdname TPR-DAG
 #' @export 
 tpr.threshold <- function(S, g, root="00", t=0.5){
-	levels <- graph.levels(g,root);
 	if(!(root %in% colnames(S))){
 		max.score <- max(S);
 		z <- rep(max.score,nrow(S));
 		S <- cbind(z,S);
 		colnames(S)[1] <- root;
 	}
+	## check consistency between nodes of g and classes of S
+	class.check <- ncol(S)!=numNodes(g);
+	if(class.check)
+		stop("TPR-DAG: the number of nodes of the graph and the number of classes of the flat scores matrix does not match", call.=FALSE);
+	## compute graph levels
+	levels <- graph.levels(g,root);
 	# bottom-up visit
 	chd.bup <- get.children.bottom.up(g,levels);
 	for(i in 1:length(chd.bup)){
@@ -116,13 +120,18 @@ tpr.threshold <- function(S, g, root="00", t=0.5){
 #' @rdname TPR-DAG
 #' @export 
 tpr.threshold.free <- function(S, g, root="00"){
-	levels <- graph.levels(g,root)
 	if(!(root %in% colnames(S))){
 		max.score <- max(S);
 		z <- rep(max.score,nrow(S));
 		S <- cbind(z,S);
 		colnames(S)[1] <- root;
 	}
+	## check consistency between nodes of g and classes of S
+	class.check <- ncol(S)!=numNodes(g);
+	if(class.check)
+		stop("TPR-DAG: the number of nodes of the graph and the number of classes of the flat scores matrix does not match", call.=FALSE);
+	## compute graph levels	
+	levels <- graph.levels(g,root);
 	# bottom-up visit
 	chd.bup <- get.children.bottom.up(g,levels);
 	for(i in 1:length(chd.bup)){
@@ -160,13 +169,18 @@ tpr.threshold.free <- function(S, g, root="00"){
 #' @rdname TPR-DAG 
 #' @export 
 tpr.weighted.threshold.free <- function(S, g, root="00", w=0.5){
-	levels <- graph.levels(g,root);
 	if(!(root %in% colnames(S))){
 		max.score <- max(S);
 		z <- rep(max.score,nrow(S));
 		S <- cbind(z,S);
 		colnames(S)[1] <- root;
 	}
+	## check consistency between nodes of g and classes of S
+	class.check <- ncol(S)!=numNodes(g);
+	if(class.check)
+		stop("TPR-DAG: the number of nodes of the graph and the number of classes of the flat scores matrix does not match", call.=FALSE);
+	## compute graph levels
+	levels <- graph.levels(g,root);
 	# bottom-up visit
 	chd.bup <- get.children.bottom.up(g,levels);
 	for(i in 1:length(chd.bup)){
@@ -206,13 +220,18 @@ tpr.weighted.threshold.free <- function(S, g, root="00", w=0.5){
 #' @rdname TPR-DAG 
 #' @export 
 tpr.weighted.threshold <- function(S, g, root="00", t=0.5, w=0.5){
-	levels <- graph.levels(g,root)
 	if(!(root %in% colnames(S))){
 		max.score <- max(S);
 		z <- rep(max.score,nrow(S));
 		S <- cbind(z,S);
 		colnames(S)[1] <- root;
 	}
+	## check consistency between nodes of g and classes of S
+	class.check <- ncol(S)!=numNodes(g);
+	if(class.check)
+		stop("TPR-DAG: the number of nodes of the graph and the number of classes of the flat scores matrix does not match", call.=FALSE);
+	## compute graph levels
+	levels <- graph.levels(g,root);
 	# bottom-up visit
 	chd.bup <- get.children.bottom.up(g,levels);
 	for(i in 1:length(chd.bup)){

@@ -1,7 +1,6 @@
 ##*********##
 ## DESCENS ##
 ##*********##
-
 #' @name DESCENS
 #' @aliases descens.threshold
 #' @aliases descens.threshold.free
@@ -59,8 +58,8 @@
 #' \eqn{\delta_i} positive nodes.
 #' @param S a named flat scores matrix with examples on rows and classes on columns
 #' @param g a graph of class \code{graphNEL}. It represents the hierarchy of the classes
-#' @param root name of the class that it is on the top-level of the hierarchy (def. \code{root="00"})
-#' @param t threshold for the choice of the positive descendants (def. \code{t=0.5}); whereas in the \code{descens.tau} variant 
+#' @param root name of the class that it is on the top-level of the hierarchy (\code{def. root="00"})
+#' @param t threshold for the choice of the positive descendants (\code{def. t=0.5}); whereas in the \code{descens.tau} variant 
 #' the parameter \code{t} balances the contribution between the positives children of a node \eqn{i} and that of its
 #' positives descendants excluding the positives children
 #' @param w weight to balance between the contribution of the node \eqn{i} and that of its positive descendants
@@ -79,13 +78,18 @@
 #' @rdname DESCENS
 #' @export 
 descens.threshold <- function(S, g, root="00", t=0.5){
-	levels <- graph.levels(g,root);
 	if(!(root %in% colnames(S))){
 		max.score <- max(S);
 		z <- rep(max.score,nrow(S));
 		S <- cbind(z,S);
 		colnames(S)[1] <- root;
 	}
+	## check consistency between nodes of g and classes of S
+	class.check <- ncol(S)!=numNodes(g);
+	if(class.check)
+		stop("DESCENS: the number of nodes of the graph and the number of classes of the flat scores matrix does not match", call.=FALSE);
+	## compute graph levels
+	levels <- graph.levels(g,root);
 	# bottom-up visit
 	desc.bup <- build.descendants.bottom.up(g,levels);
 	nodes <- names(desc.bup);
@@ -127,13 +131,18 @@ descens.threshold <- function(S, g, root="00", t=0.5){
 #' @rdname DESCENS
 #' @export 
 descens.threshold.free <- function(S, g, root="00"){
-	levels <- graph.levels(g,root);
 	if(!(root %in% colnames(S))){
 		max.score <- max(S);
 		z <- rep(max.score,nrow(S));
 		S <- cbind(z,S);
 		colnames(S)[1] <- root;
 	}
+	## check consistency between nodes of g and classes of S
+	class.check <- ncol(S)!=numNodes(g);
+	if(class.check)
+		stop("DESCENS: the number of nodes of the graph and the number of classes of the flat scores matrix does not match", call.=FALSE);
+	## compute graph levels
+	levels <- graph.levels(g,root);
 	# bottom-up visit
 	desc.bup <- build.descendants.bottom.up(g,levels);
 	nodes <- names(desc.bup);
@@ -175,13 +184,18 @@ descens.threshold.free <- function(S, g, root="00"){
 #' @rdname DESCENS
 #' @export 
 descens.weighted.threshold.free <- function(S, g, root="00", w=0.5){
-	levels <- graph.levels(g,root);
 	if(!(root %in% colnames(S))){
 		max.score <- max(S);
 		z <- rep(max.score,nrow(S));
 		S <- cbind(z,S);
 		colnames(S)[1] <- root;
 	}
+	## check consistency between nodes of g and classes of S
+	class.check <- ncol(S)!=numNodes(g);
+	if(class.check)
+		stop("DESCENS: the number of nodes of the graph and the number of classes of the flat scores matrix does not match", call.=FALSE);
+	## compute graph levels
+	levels <- graph.levels(g,root);
 	# bottom-up visit
 	desc.bup <- build.descendants.bottom.up(g,levels);
 	nodes <- names(desc.bup);
@@ -225,13 +239,18 @@ descens.weighted.threshold.free <- function(S, g, root="00", w=0.5){
 #' @rdname DESCENS
 #' @export 
 descens.weighted.threshold <- function(S, g, root="00", t=0.5, w=0.5){
-	levels <- graph.levels(g,root);
 	if(!(root %in% colnames(S))){
 		max.score <- max(S);
 		z <- rep(max.score,nrow(S));
 		S <- cbind(z,S);
 		colnames(S)[1] <- root;
 	}
+	## check consistency between nodes of g and classes of S
+	class.check <- ncol(S)!=numNodes(g);
+	if(class.check)
+		stop("DESCENS: the number of nodes of the graph and the number of classes of the flat scores matrix does not match", call.=FALSE);
+	## compute graph levels
+	levels <- graph.levels(g,root);
 	# bottom-up visit
 	desc.bup <- build.descendants.bottom.up(g,levels);
 	nodes <- names(desc.bup);
@@ -275,13 +294,18 @@ descens.weighted.threshold <- function(S, g, root="00", t=0.5, w=0.5){
 #' @rdname DESCENS
 #' @export 
 descens.tau <- function(S, g, root="00", t=0.5){
-	levels <- graph.levels(g,root);
 	if(!(root %in% colnames(S))){
 		max.score <- max(S);
 		z <- rep(max.score,nrow(S));
 		S <- cbind(z,S);
 		colnames(S)[1] <- root;
 	}
+	## check consistency between nodes of g and classes of S
+	class.check <- ncol(S)!=numNodes(g);
+	if(class.check)
+		stop("DESCENS: the number of nodes of the graph and the number of classes of the flat scores matrix does not match", call.=FALSE);
+	## compute graph levels
+	levels <- graph.levels(g,root);
 	# bottom-up visit
 	chd.bup <- get.children.bottom.up(g,levels);
 	desc.bup <- build.descendants.bottom.up(g,levels);

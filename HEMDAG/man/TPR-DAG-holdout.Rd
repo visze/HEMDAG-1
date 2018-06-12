@@ -6,57 +6,83 @@
 \title{TPR-DAG holdout experiments}
 \usage{
 Do.TPR.DAG.holdout(threshold = seq(from = 0.1, to = 0.9, by = 0.1),
-  weight = seq(from = 0.1, to = 1, by = 0.1), kk = 5, seed = NULL,
-  norm = TRUE, norm.type = NULL, positives = "children",
-  bottomup = "threshold.free", flat.file = flat.file, ann.file = ann.file,
-  dag.file = dag.file, ind.test.set = ind.test.set, ind.dir = ind.dir,
-  flat.dir = flat.dir, ann.dir = ann.dir, dag.dir = dag.dir,
-  flat.norm.dir = NULL, n.round = 3, f.criterion = "F",
-  hierScore.dir = hierScore.dir, perf.dir = perf.dir)
+  weight = seq(from = 0.1, to = 1, by = 0.1), kk = 5, folds = 5,
+  seed = 23, norm = TRUE, norm.type = NULL, positive = "children",
+  bottomup = "threshold.free", rec.levels = seq(from = 0.1, to = 1, by =
+  0.1), n.round = 3, f.criterion = "F", metric = NULL,
+  flat.file = flat.file, ann.file = ann.file, dag.file = dag.file,
+  ind.test.set = ind.test.set, ind.dir = ind.dir, flat.dir = flat.dir,
+  ann.dir = ann.dir, dag.dir = dag.dir, hierScore.dir = hierScore.dir,
+  perf.dir = perf.dir)
 }
 \arguments{
 \item{threshold}{range of threshold values to be tested in order to find the best threshold (def: \code{from:0.1}, \code{to:0.9}, \code{by:0.1}).
-The denser the range is, the higher the probability to find the best theshold is, but obviously the execution time will be higher.
+The denser the range is, the higher the probability to find the best threshold is, but obviously the execution time will be higher.
 Set the parameter \code{threshold} only for the variants that requiring a threshold for the positive nodes selection, 
 otherwise set the parameter \code{threshold} to zero}
 
 \item{weight}{range of weight values to be tested in order to find the best weight (def: \code{from:0.1}, \code{to:0.9}, \code{by:0.1}).
-The denser the range is, the higher the probability to find the best theshold is, but obviously the execution time will be higher.
+The denser the range is, the higher the probability to find the best threshold is, but obviously the execution time will be higher.
 Set the parameter \code{weight} only for the \emph{weighted} variants, otherwise set the parameter \code{weight} to zero}
 
-\item{kk}{number of folds of the cross validation (\code{def: kk=5});}
+\item{kk}{number of folds of the cross validation (\code{def: kk=5}) on which tuning the parameters \code{threshold} and \code{weight} and}
 
-\item{seed}{intialization seed for the random generator to create folds. If \code{NULL} (def.) no initialization is performed}
+\item{folds}{number of folds of the cross validation on which computing the performance metrics averaged across folds (\code{def. 5}).
+If \code{folds=NULL}, the performance metrics are computed one-shot, otherwise the performance metrics are averaged across folds.}
 
-\item{norm}{boolean value: 
+\item{seed}{initialization seed for the random generator to create folds (\code{def. 23}). If \code{NULL} folds are generated without seed 
+initialization. The parameter \code{seed} controls both the parameter \code{kk} and the parameter \code{folds}.}
+
+\item{norm}{boolean value: should the flat scores matrix be normalized?
 \itemize{
-\item \code{TRUE} (def.): the flat scores matrix has been already normalized in according to a normalization method;    
-\item \code{FALSE}: the flat scores matrix has not been normalized yet. See the parameter \code{norm.type} for which normalization can be applied.
+\item \code{TRUE} (\code{def.}): the flat scores matrix has been already normalized in according to a normalization method;    
+\item \code{FALSE}: the flat scores matrix has not been normalized yet. See the parameter \code{norm.type} to set the on the fly 
+normalization method to apply among those possible.
 }}
 
 \item{norm.type}{can be one of the following three values: 
 \enumerate{
-\item \code{NULL} (def.): set \code{norm.type} to \code{NULL} if and only if the parameter \code{norm} is set to \code{TRUE};
+\item \code{NULL} (\code{def.}): set \code{norm.type} to \code{NULL} if and only if the parameter \code{norm} is set to \code{TRUE};
 \item \code{MaxNorm}: each score is divided for the maximum of each class;
 \item \code{Qnorm}: quantile normalization. \pkg{preprocessCore} package is used. 
 }}
 
-\item{positives}{choice of the \emph{positive} nodes to be considered in the bottom-up strategy. Can be one of the following values:
+\item{positive}{choice of the \emph{positive} nodes to be considered in the bottom-up strategy. Can be one of the following values:
 \itemize{
-    \item \code{children}: for each node are considered its positive children (\code{def.});
+    \item \code{children} (\code{def.}): for each node are considered its positive children;
     \item \code{descendants}: for each node are considered its positive descendants;
 }}
 
 \item{bottomup}{strategy to enhance the flat predictions by propagating the positive predictions from leaves to root. 
 It can be one of the following values:
 \itemize{
-    \item \code{threshold.free}: positive nodes are selected on the basis of the \code{threshold.free} strategy (\code{def.});
+    \item \code{threshold.free} (\code{def.}): positive nodes are selected on the basis of the \code{threshold.free} strategy (\code{def.});
     \item \code{threshold}: positive nodes are selected on the basis of the \code{threshold} strategy;
     \item \code{weighted.threshold.free}: positive nodes are selected on the basis of the \code{weighted.threshold.free} strategy;
     \item \code{weighted.threshold}: positive nodes are selected on the basis of the \code{weighted.threshold} strategy;
     \item \code{tau}: positive nodes are selected on the basis of the \code{tau} strategy. 
-NOTE: \code{tau} is only a \code{DESCENS} variants. If you use \code{tau} strategy you must set the parameter \code{positives} 
-to \code{descendants};
+NOTE: \code{tau} is only a \code{DESCENS} variants. If you use \code{tau} strategy you must set the parameter \code{positive=descendants};
+}}
+
+\item{rec.levels}{a vector with the desired recall levels (\code{def:} \code{from:0.1}, \code{to:0.9}, \code{by:0.1}) to compute the 
+the Precision at fixed Recall level (PXR)}
+
+\item{n.round}{number of rounding digits to be applied to the hierarchical scores matrix (\code{def. 3}). It is used for choosing 
+the best threshold on the basis of the best F-measure}
+
+\item{f.criterion}{character. Type of F-measure to be used to select the best F-measure. Two possibilities:
+\enumerate{
+\item \code{F} (def.): corresponds to the harmonic mean between the average precision and recall
+\item \code{avF}: corresponds to the per-example \code{F-score} averaged across all the examples
+}}
+
+\item{metric}{a string character specifying the performance metric on which to maximize the parametric ensemble variant. 
+It can be one of the following values:
+\enumerate{
+\item \code{PRC}: the parametric ensemble variant is maximized on the basis of AUPRC (\code{\link{AUPRC}});
+\item \code{FMAX}: the parametric ensemble variant is maximized on the basis of Fmax (\code{\link{Multilabel.F.measure}};
+\item \code{NULL}: on the \code{threshold.free} variant none parameter optimization is needed, since the variant is non-parametric. 
+So, if \code{bottomup=threshold.free} set \code{metric=NULL} (\code{def.}).
 }}
 
 \item{flat.file}{name of the file containing the flat scores matrix to be normalized or already normalized (without rda extension)}
@@ -76,44 +102,34 @@ matrix to be used in the    test set}
 
 \item{dag.dir}{relative path where graph is stored}
 
-\item{flat.norm.dir}{relative path where flat normalized scores matrix must be stored. Use this parameter if and only if \code{norm} is
-set to \code{FALSE}, otherwise set \code{flat.norm.dir} to \code{NULL} (def.)}
-
-\item{n.round}{number of rounding digits to be applied to the hierarchical scores matrix (\code{def. 3}). It is used for choosing 
-the best threshold on the basis of the best F-measure}
-
-\item{f.criterion}{character. Type of F-measure to be used to select the best F-measure. Two possibilities:
-\enumerate{
-\item \code{F} (def.): corresponds to the harmonic mean between the average precision and recall
-\item \code{avF}: corresponds to the per-example \code{F-score} averaged across all the examples
-}}
-
 \item{hierScore.dir}{relative path where the hierarchical scores matrix must be stored}
 
-\item{perf.dir}{relative path where the term-centric and protein-centric measures must be stored}
+\item{perf.dir}{relative path where the performance measures must be stored}
 }
 \value{
-Five \code{rda} files stored in the respective output directories:
+Two \code{rda} files stored in the respective output directories:
 \enumerate{
-\item \code{hierarchical scores matrix}: a matrix with examples on rows and classes on columns representing the computed hierarchical scores 
-for each example and for each considered class. This file is stored in \code{hierScore.dir} directory.
-\item \code{FMM} (F-Measure Multilabel) \code{results}: \code{F-score} computed by \code{find.best.f} function. 
-Both \emph{flat} and \emph{hierarchical} results are reported. This file is stored in \code{perf.dir} directory.
-\item \code{PRC} (area under Precision-Recall Curve) \code{results}: \code{PRC} computed by \pkg{precrec} package. 
-Both \emph{flat} and \emph{hierarchical} results are reported. This file is stored in \code{perf.dir} directory.
-\item \code{AUC} (Area Under ROC Curve) \code{results}: \code{AUC} computed by \pkg{precrec} package. 
-Both \emph{flat} and \emph{hierarchical} results are reported. This file is stored in \code{perf.dir} directory.
-\item \code{PXR} (Precision at fixed Recall levels) average and per classes: \code{PXR} computed by \pkg{PerfMeas} package. 
-It is stored in \code{perf.dir} directory.
-}
+	\item \code{Hierarchical Scores Results}: a matrix with examples on rows and classes on columns representing the computed hierarchical scores 
+	for each example and for each considered class. It is stored in the \code{hierScore.dir} directory.
+	\item \code{Performance Measures}: \emph{flat} and \emph{hierarchical} performace results:
+	\enumerate{
+		\item AUPRC results computed though \code{AUPRC.single.over.classes} (\code{\link{AUPRC}});
+	\item AUROC results computed through \code{AUROC.single.over.classes} (\code{\link{AUROC}}); 
+		\item PXR results computed though \code{PXR.at.multiple.recall.levels.over.classes} (\code{\link{PXR}});
+		\item FMM results computed though \code{compute.Fmeasure.multilabel} (\code{\link{FMM}}); 
+}}
+It is stored in the \code{perf.dir} directory.
 }
 \description{
-High level function to correct the computed scores in a hierarchy according to the chosen ensemble algorithm 
-through an hold-out procedure
+High level function to correct the computed scores in a hierarchy according to the chosen ensemble algorithm
 }
 \details{
-The variants choosing the positives nodes on the basis of a parameter are cross-validated by maximizing 
-on F-measure (\code{\link{Multilabel.F.measure}})
+The parametric hierarchical ensemble variants are cross-validated by maximizing in according to the metric
+chosen in the parameter \code{metric}, that is F-measure (\code{\link{Multilabel.F.measure}}) or AUPRC (\code{\link{AUPRC}}).\cr
+The function check if the number of classes between the flat scores matrix and the annotations matrix mismatched, 
+since some terms might have been removed from the flat scores matrix before applying an hierarchy-unaware algorithm. 
+If so, the number of classes of the annotations matrix is narrowed to the number of terms of the flat scores matrix and 
+the corresponding subgraph is computed as well.
 }
 \examples{
 data(graph);
@@ -130,22 +146,23 @@ save(g,file="data/graph.rda");
 save(L,file="data/labels.rda");
 save(S,file="data/scores.rda");
 save(test.index, file="data/test.index.rda");
-ind.dir <- dag.dir <- flat.dir <- flat.norm.dir <- ann.dir <- "data/";
+ind.dir <- dag.dir <- flat.dir <- ann.dir <- "data/";
 hierScore.dir <- perf.dir <- "results/";
-dag.dir <- flat.dir <- flat.norm.dir <- ann.dir <- "data/";
+dag.dir <- flat.dir <- ann.dir <- "data/";
 ind.test.set <- "test.index";
 dag.file <- "graph";
 flat.file <- "scores";
 ann.file <- "labels";
 threshold <- weight <- 0;
-positives <- "children";
+norm.type <- "MaxNorm";
+positive <- "children";
 bottomup <- "threshold.free";
-Do.TPR.DAG.holdout(threshold=threshold, weight=weight, kk=5, seed=23, norm=FALSE, 
-norm.type="MaxNorm", positives=positives, bottomup=bottomup,flat.file=flat.file, 
-ann.file=ann.file, dag.file=dag.file, ind.test.set=ind.test.set, 
-ind.dir=ind.dir, flat.dir=flat.dir, ann.dir=ann.dir, dag.dir=dag.dir, 
-flat.norm.dir=flat.norm.dir, n.round=3, f.criterion="F", 
-hierScore.dir=hierScore.dir, perf.dir=perf.dir);
+rec.levels <- seq(from=0.1, to=1, by=0.1);
+Do.TPR.DAG.holdout(threshold=threshold, weight=weight, kk=5, folds=NULL, seed=23, norm=FALSE, 
+norm.type=norm.type, positive=positive, bottomup=bottomup, rec.levels=rec.levels, n.round=3, 
+f.criterion="F", metric=NULL, flat.file=flat.file, ann.file=ann.file, dag.file=dag.file, 
+ind.test.set=ind.test.set, ind.dir=ind.dir, flat.dir=flat.dir, ann.dir=ann.dir, 
+dag.dir=dag.dir, hierScore.dir=hierScore.dir, perf.dir=perf.dir);
 }
 \seealso{
 \code{\link{TPR-DAG-variants}}

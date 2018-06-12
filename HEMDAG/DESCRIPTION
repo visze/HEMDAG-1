@@ -1,6 +1,6 @@
 Package: HEMDAG
 Title: Hierarchical Ensemble Methods for Directed Acyclic Graphs
-Version: 2.0.1
+Version: 2.1.2
 Author: Marco Notaro [aut, cre] and Giorgio Valentini [aut] 
 	(AnacletoLab, Dipartimento di Informatica, Universita' degli Studi di Milano)
 Maintainer: Marco Notaro <marco.notaro@unimi.it>
@@ -14,5 +14,5 @@ NeedsCompilation: no
 Imports: graph, RBGL, PerfMeas, precrec, preprocessCore, methods
 Suggests: Rgraphviz
 RoxygenNote: 6.0.1
-Packaged: 2018-02-02 18:04:37 UTC; marco
-Date/Publication: 2018-02-02 18:32:29 UTC
+Packaged: 2018-05-07 16:13:33 UTC; marco
+Date/Publication: 2018-05-07 16:36:00 UTC

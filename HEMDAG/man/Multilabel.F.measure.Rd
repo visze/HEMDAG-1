@@ -16,7 +16,8 @@ F.measure.multilabel(target, predicted, b.per.example = FALSE)
 \item{target}{matrix with the target multilabels: rows correspond to examples and columns to classes.
 \eqn{target[i,j]=1} if example \eqn{i} belongs to class \eqn{j}, \eqn{target[i,j]=0} otherwise}
 
-\item{predicted}{a numeric matrix with predicted values (scores): rows correspond to examples and columns to classes}
+\item{predicted}{a numeric matrix with discrete predicted values: rows correspond to examples and columns to classes.
+\eqn{predicted[i,j]=1} if example \eqn{i} is predicted belonging to class \eqn{j}, \eqn{target[i,j]=0} otherwise}
 
 \item{b.per.example}{boolean. 
 \itemize{
@@ -25,7 +26,7 @@ F.measure.multilabel(target, predicted, b.per.example = FALSE)
 }}
 }
 \value{
-Two different outputs respect to the input paramenter \code{b.per.example}:
+Two different outputs respect to the input parameter \code{b.per.example}:
 \itemize{
 \item \code{b.per.example==FALSE}: a list with a single element average. A named vector with average precision (P), recall (R), 
 	specificity (S), F-measure (F), average F-measure (avF) and Accuracy (A) across examples. F is the F-measure computed as the 
@@ -41,7 +42,7 @@ Two different outputs respect to the input paramenter \code{b.per.example}:
 }
 }
 \description{
-Method for computing Precision, Recall, Specificity, Accuracy and F-measure for multiclass multilabel classification
+Method for computing Precision, Recall, Specificity, Accuracy and F-measure for multiclass and multilabel classification
 }
 \examples{
 data(labels);

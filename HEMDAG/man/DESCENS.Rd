@@ -24,9 +24,9 @@ descens.tau(S, g, root = "00", t = 0.5)
 
 \item{g}{a graph of class \code{graphNEL}. It represents the hierarchy of the classes}
 
-\item{root}{name of the class that it is on the top-level of the hierarchy (def. \code{root="00"})}
+\item{root}{name of the class that it is on the top-level of the hierarchy (\code{def. root="00"})}
 
-\item{t}{threshold for the choice of the positive descendants (def. \code{t=0.5}); whereas in the \code{descens.tau} variant 
+\item{t}{threshold for the choice of the positive descendants (\code{def. t=0.5}); whereas in the \code{descens.tau} variant 
 the parameter \code{t} balances the contribution between the positives children of a node \eqn{i} and that of its
 positives descendants excluding the positives children}
 

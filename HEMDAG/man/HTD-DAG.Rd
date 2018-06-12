@@ -18,7 +18,7 @@ htd(S, g, root = "00")
 a matrix with the scores of the classes corrected according to the HTD-DAG algorithm.
 }
 \description{
-Implementetion of a top-down procedure to correct the scores of the hierarchy according to the 
+Implementation of a top-down procedure to correct the scores of the hierarchy according to the 
 constraints that the score of a node cannot be greater than a score of its parents.
 }
 \details{

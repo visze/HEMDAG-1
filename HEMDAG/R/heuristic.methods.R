@@ -1,7 +1,6 @@
 ###################################
 ##  Obozinski Heuristic Methods  ##
 ###################################
-
 #' @name Heuristic-Methods
 #' @aliases heuristicMAX
 #' @aliases heuristicAND
@@ -32,17 +31,22 @@
 #' S.heuristicOR <- heuristicOR(S,g,root);
 heuristicMAX <- function(S, g, root="00"){
 	if(!(root %in% colnames(S))) {
-	  max.score <- max(S);
-	  z <- rep(max.score,nrow(S));
-	  S <- cbind(z,S);
-	  colnames(S)[1] <- root;
+		max.score <- max(S);
+		z <- rep(max.score,nrow(S));
+		S <- cbind(z,S);
+		colnames(S)[1] <- root;
 	}
+	## check consistency between nodes of g and classes of S
+	class.check <- ncol(S)!=numNodes(g);
+	if(class.check)
+		stop("HEURISTIC: the number of nodes of the graph and the number of classes of the flat scores matrix does not match", call.=FALSE);
+
 	desc <- build.descendants(g);
 	for(i in 1:length(desc)){
-	  curr.nd <- S[,names(desc[i])];
-	  progeny <- as.matrix(S[,desc[[i]]]);
-	  curr.nd <- apply(progeny, 1, max);
-	  S[,names(desc[i])] <- curr.nd;
+		curr.nd <- S[,names(desc[i])];
+		progeny <- as.matrix(S[,desc[[i]]]);
+		curr.nd <- apply(progeny, 1, max);
+		S[,names(desc[i])] <- curr.nd;
 	}
 	S <- S[,-which(colnames(S)==root)]; 
 	return(S);
@@ -52,21 +56,25 @@ heuristicMAX <- function(S, g, root="00"){
 #' @export 
 heuristicAND <- function(S, g, root="00"){
 	if(!(root %in% colnames(S))) {
-	  max.score <- max(S);
-	  z <- rep(max.score,nrow(S));
-	  S <- cbind(z,S);
-	  colnames(S)[1] <- root;
+		max.score <- max(S);
+		z <- rep(max.score,nrow(S));
+		S <- cbind(z,S);
+		colnames(S)[1] <- root;
 	}
+	## check consistency between nodes of g and classes of S
+	class.check <- ncol(S)!=numNodes(g);
+	if(class.check)
+		stop("HEURISTIC: the number of nodes of the graph and the number of classes of the flat scores matrix does not match", call.=FALSE);
+
 	S.corr <- S;
-	
 	anc <- build.ancestors(g);
 	for(i in 1:length(anc)){
-	  if (length(anc[[i]]) > 1) {  # ancestors of i include also i
-	    curr.nd <- S[,names(anc[i])];
-	    forefathers <- as.matrix(S[,anc[[i]]]);
-	    curr.nd <- apply(forefathers, 1, prod);
-	    S.corr[,names(anc[i])] <- curr.nd;  
-	  }	
+	  if(length(anc[[i]]) > 1){  # ancestors of i include also i
+			curr.nd <- S[,names(anc[i])];
+			forefathers <- as.matrix(S[,anc[[i]]]);
+			curr.nd <- apply(forefathers, 1, prod);
+			S.corr[,names(anc[i])] <- curr.nd;  
+	  	}	
 	}
 	S.corr <- S.corr[,-which(colnames(S.corr)==root)];
 	return(S.corr);
@@ -76,19 +84,24 @@ heuristicAND <- function(S, g, root="00"){
 #' @export 
 heuristicOR <- function(S, g, root="00"){
 	if(!(root %in% colnames(S))) {
-	  max.score <- max(S);
-	  z <- rep(max.score,nrow(S));
-	  S <- cbind(z,S);
-	  colnames(S)[1] <- root;
+		max.score <- max(S);
+		z <- rep(max.score,nrow(S));
+		S <- cbind(z,S);
+		colnames(S)[1] <- root;
 	}
+	## check consistency between nodes of g and classes of S
+	class.check <- ncol(S)!=numNodes(g);
+	if(class.check)
+		stop("HEURISTIC: the number of nodes of the graph and the number of classes of the flat scores matrix does not match", call.=FALSE);
+
 	S.corr <- S;
 	desc <- build.descendants(g);
 	for(i in 1:length(desc)){
 	  if(length(desc[[i]]) > 1){  # descendants of i include also i
-		comp.progeny <- 1 - as.matrix(S[,desc[[i]]]);
-		curr.nd <- apply(comp.progeny, 1, prod);		
-		S.corr[,names(desc[i])] <- 1 - curr.nd;
-	  }
+			comp.progeny <- 1 - as.matrix(S[,desc[[i]]]);
+			curr.nd <- apply(comp.progeny, 1, prod);		
+			S.corr[,names(desc[i])] <- 1 - curr.nd;
+	  	}
 	}
 	S.corr <- S.corr[,-which(colnames(S.corr)==root)]; 
 	return(S.corr);
@@ -97,11 +110,14 @@ heuristicOR <- function(S, g, root="00"){
 ##**********************##
 ## DO HEURISTIC METHODS ##
 ##**********************##
-
 #' @title Do Heuristic Methods
 #' @seealso \code{\link{Heuristic-Methods}}
 #' @description High level function to compute the hierarchical heuristic methods MAX, AND, OR (Heuristic Methods MAX, AND, OR (\cite{Obozinski et al., 
 #' Genome Biology, 2008})
+#' @details The function check if the number of classes between the flat scores matrix and the annotations matrix mismatched
+#' (e.g. some terms might be removed from the flat scores matrix before applying an hierarchy-unaware algorithm). 
+#' If so, the number of classes of the annotations matrix is narrowed to the number of terms of the flat scores matrix and 
+#' the corresponding subgraph is computed as well.
 #' @param heuristic.fun can be one of the following three values:
 #' \enumerate{
 #' 	\item "MAX": run the heuristic method MAX;
@@ -119,14 +135,10 @@ heuristicOR <- function(S, g, root="00"){
 #'  \item \code{MaxNorm}: each score is divided for the maximum of each class;
 #'  \item \code{Qnorm}: quantile normalization. \pkg{preprocessCore} package is used. 
 #'  }
-#' @param flat.file name of the file containing the flat scores matrix to be normalized or already normalized (without rda extension)
-#' @param ann.file name of the file containing the the label matrix of the examples (without rda extension)
-#' @param dag.file name of the file containing the graph that represents the hierarchy of the classes (without rda extension)
-#' @param flat.dir relative path where flat scores matrix is stored
-#' @param ann.dir relative path where annotation matrix is stored
-#' @param dag.dir relative path where graph is stored
-#' @param flat.norm.dir relative path where flat normalized scores matrix must be strored. Use this parameter if and only if \code{norm} is
-#' set to \code{FALSE}, otherwise set \code{flat.norm.dir} to \code{NULL} (def.)
+#' @param folds number of folds of the cross validation on which computing the performance metrics averaged across folds (\code{def. 5}).
+#' If \code{folds=NULL}, the performance metrics are computed one-shot, otherwise the performance metrics are averaged across folds.
+#' @param seed initialization seed for the random generator to create folds (\code{def. 23}). If \code{NULL} folds are generated without seed 
+#' initialization. 
 #' @param n.round number of rounding digits to be applied to the hierarchical scores matrix (\code{def. 3}). It is used for choosing 
 #' the best threshold on the basis of the best F-measure
 #' @param f.criterion character. Type of F-measure to be used to select the best F-measure. Two possibilities:
@@ -134,21 +146,28 @@ heuristicOR <- function(S, g, root="00"){
 #' \item \code{F} (def.): corresponds to the harmonic mean between the average precision and recall
 #' \item \code{avF}: corresponds to the per-example \code{F-score} averaged across all the examples
 #' }
+#' @param rec.levels a vector with the desired recall levels (\code{def:} \code{from:0.1}, \code{to:0.9}, \code{by:0.1}) to compute the 
+#' the Precision at fixed Recall level (PXR)
+#' @param flat.file name of the file containing the flat scores matrix to be normalized or already normalized (without rda extension)
+#' @param ann.file name of the file containing the the label matrix of the examples (without rda extension)
+#' @param dag.file name of the file containing the graph that represents the hierarchy of the classes (without rda extension)
+#' @param flat.dir relative path where flat scores matrix is stored
+#' @param ann.dir relative path where annotation matrix is stored
+#' @param dag.dir relative path where graph is stored
 #' @param hierScore.dir relative path where the hierarchical scores matrix must be stored
-#' @param perf.dir relative path where the term-centric and protein-centric measures must be stored
-#' @return Five \code{rda} files stored in the rispective output directories:
+#' @param perf.dir relative path where all the performance measures must be stored
+#' @return Two \code{rda} files stored in the respective output directories:
 #' \enumerate{
-#' \item \code{hierarchical scores matrix}: a matrix with examples on rows and classes on columns representing the computed hierarchical scores 
-#' for each class and example considered. It stored in \code{hierScore.dir} directory.
-#' \item \code{FMM} (F-Measure Multilabel) average and per-example: compute \code{F-score} measure by \code{find.best.f} function. 
-#' It stored in \code{perf.dir} directory.
-#' \item \code{PRC} (area under Precision-Recall Curve) average and per.class: compute \code{PRC} by \pkg{precrec} package. 
-#' It stored in \code{perf.dir} directory.
-#' \item \code{AUC} (Area Under ROC Curve) average and per-class: compute \code{AUC} by \pkg{precrec} package. 
-#' It stored in \code{perf.dir} directory.
-#' \item \code{PXR} (Precision at fixed Recall levels) average and per classes: compute \code{PXR}  by \pkg{PerfMeas} package. 
-#' It stored in \code{perf.dir} directory.
-#' }
+#' 	\item \code{Hierarchical Scores Results}: a matrix with examples on rows and classes on columns representing the computed hierarchical scores 
+#' 	for each example and for each considered class. It is stored in the \code{hierScore.dir} directory.
+#' 	\item \code{Performance Measures}: \emph{flat} and \emph{hierarchical} performace results:
+#' 	\enumerate{
+#' 		\item AUPRC results computed though \code{AUPRC.single.over.classes} (\code{\link{AUPRC}});
+#'		\item AUROC results computed through \code{AUROC.single.over.classes} (\code{\link{AUROC}}); 
+#' 		\item PXR results computed though \code{PXR.at.multiple.recall.levels.over.classes} (\code{\link{PXR}});
+#' 		\item FMM results computed though \code{compute.Fmeasure.multilabel} (\code{\link{FMM}}); 
+#' }}
+#' It is stored in the \code{perf.dir} directory.
 #' @export
 #' @examples
 #' data(graph);
@@ -163,127 +182,119 @@ heuristicOR <- function(S, g, root="00"){
 #' save(g,file="data/graph.rda");
 #' save(L,file="data/labels.rda");
 #' save(S,file="data/scores.rda");
-#' dag.dir <- flat.dir <- flat.norm.dir <- ann.dir <- "data/";
+#' dag.dir <- flat.dir <- ann.dir <- "data/";
 #' hierScore.dir <- perf.dir <- "results/";
+#' rec.levels <- seq(from=0.1, to=1, by=0.1);
 #' dag.file <- "graph";
 #' flat.file <- "scores";
 #' ann.file <- "labels";
-#' Do.heuristic.methods(heuristic.fun="AND", norm=FALSE, norm.type="MaxNorm", 
+#' Do.heuristic.methods(heuristic.fun="AND", norm=FALSE, norm.type="MaxNorm",
+#' folds=5, seed=23, n.round=3, f.criterion ="F", rec.levels=rec.levels, 
 #' flat.file=flat.file, ann.file=ann.file, dag.file=dag.file, flat.dir=flat.dir, 
-#' ann.dir=ann.dir, dag.dir=dag.dir, flat.norm.dir=flat.norm.dir, n.round=3, 
-#' f.criterion="F", hierScore.dir=hierScore.dir, perf.dir=perf.dir);
-Do.heuristic.methods <- function(heuristic.fun="AND", norm=TRUE, norm.type= "NONE", flat.file=flat.file, 
-	ann.file=ann.file, dag.file=dag.file, flat.dir=flat.dir, ann.dir=ann.dir, dag.dir=dag.dir, flat.norm.dir=NULL, n.round=3, 
-	f.criterion="F", hierScore.dir=hierScore.dir, perf.dir=perf.dir){
+#' ann.dir=ann.dir, dag.dir=dag.dir, hierScore.dir=hierScore.dir, perf.dir=perf.dir);
+Do.heuristic.methods <- function(heuristic.fun="AND", norm=TRUE, norm.type=NULL, folds=5, seed=23, 
+	n.round=3, f.criterion ="F", rec.levels=seq(from=0.1, to=1, by=0.1), flat.file=flat.file, ann.file=ann.file,
+	dag.file=dag.file, flat.dir=flat.dir, ann.dir=ann.dir, dag.dir=dag.dir, hierScore.dir=hierScore.dir, perf.dir=perf.dir){
 
 	## Setting Check
-	if(heuristic.fun!="MAX" && heuristic.fun!="AND" && heuristic.fun!="OR"){
-		stop("The chosen heuristic method is not among those available or it was misspelled");
-	}
-	if(norm==FALSE && length(norm.type)==0){
-		stop("If norm is set to FALSE, you need also to specify a normalization method among those available");
-	}
-	if(norm==TRUE && length(norm.type)!=0){
-		stop("If norm is set to TRUE, the input flat matrix is already normalized. Set norm.type' to NULL (without quote)");
-	}
+	if(heuristic.fun!="MAX" && heuristic.fun!="AND" && heuristic.fun!="OR")
+		stop("HEURISTIC: the chosen heuristic method is not among those available or it has been misspelled", call.=FALSE);
+	if(norm==FALSE && is.null(norm.type))
+		stop("HEURISTIC: If norm is set to FALSE, you need also to specify a normalization method among those available", call.=FALSE);
+	if(norm==TRUE && !is.null(norm.type))
+		warning("HEURISTIC: If norm is set to TRUE, the input flat matrix is already normalized.", 
+			paste0(" Set norm.type to NULL and not to '", norm.type, "' to avoid this warning message"), call.=FALSE);
 
-	## Loading Data ############
 	## loading dag
 	dag.path <- paste0(dag.dir, dag.file,".rda");
 	g <- get(load(dag.path));
-	
-	##root node
+	## compute root node 
 	root <- root.node(g);
-
-	## loading flat scores matrix relative to a specific subontology
-	flat.path <- paste0(flat.dir, flat.file,".rda");
-	if(norm){
-		S <- get(load(flat.path));
-		
-		## removing root node from flat norm matrix if it exists
-		if(root %in% colnames(S)){
-			S <- S[,-which(colnames(S)==root)];
-		}
-	}else{
-		Do.FLAT.scores.normalization(norm.type=norm.type, flat.file=flat.file, dag.file=dag.file, flat.dir=flat.dir, 
-			dag.dir=dag.dir, flat.norm.dir=flat.norm.dir);
-		flat.path <- paste0(flat.norm.dir, norm.type,".",flat.file,".rda");
-		S <- get(load(flat.path));
-	}
 
 	## loading annotation matrix
 	ann.path <- paste0(ann.dir, ann.file,".rda");
 	ann <- get(load(ann.path));
-	gc();
+	## removing root node from annotation table if it exists
+	if(root %in% colnames(ann))
+		ann <- ann[,-which(colnames(ann)==root)];
 
-	## removing root node from annotation table 
-	ann <- ann[,-which(colnames(ann)==root)];
-
-	## Computing FLAT Performances
-	## FLAT AUC computed by precrec package
-	AUC.flat <- AUROC.single.over.classes(ann, S); gc();
-	
-	## FLAT PxRs computed by PerfMeas pacakge
-	PXR.flat <- precision.at.multiple.recall.level.over.classes(ann, S); 
-
-	## F.measure: Computing Flat Examples-Measures 
-	FMM.flat <- find.best.f(ann, S, n.round=n.round, f.criterion=f.criterion, verbose=FALSE, b.per.example=TRUE); 
-
-	## FLAT PRC computed by precrec package (more precise and accurate than PerfMeas)
-	PRC.flat <- AUPRC.single.over.classes(ann, S); gc();
-
-	## Obozinski's Hierarchical Heuristic Methods ####################
-	if(heuristic.fun=="AND"){
-		S <- heuristicAND(S, g, root);
-	}else if(heuristic.fun=="MAX"){
-		S <- heuristicMAX(S, g, root);
-	}else if(heuristic.fun=="OR"){
-		S <- heuristicOR(S, g, root);
+	## loading flat matrix
+	flat.path <- paste0(flat.dir, flat.file,".rda");
+	if(norm){
+		S <- get(load(flat.path));
+		## removing root node from flat norm matrix if it exists
+		if(root %in% colnames(S))
+			S <- S[,-which(colnames(S)==root)];
+	}else{
+		S <- get(load(flat.path));
+		S <- scores.normalization(norm.type=norm.type, S);
+		cat(norm.type, "NORMALIZATION: DONE", "\n");
+		## removing root node from flat norm matrix if it exists
+		if(root %in% colnames(S))
+			S <- S[,-which(colnames(S)==root)];
 	}
+
+	## check if |flat matrix classes| = |annotation matrix classes| 
+	## if not the classes of annotation matrix are shrinked to those of flat matrix
+	class.check <- ncol(S)!=ncol(ann);
+	if(class.check){
+		ann <- ann[,colnames(S)];
+		nd <- colnames(S);
+		g <- do.subgraph(nd, g, edgemode="directed");
+	}
+
+	## Compute FLAT PRC, AUC, PXR (average and per class) FMM (average and per-example) one-shoot or cross-validated 
+	PRC.flat <- AUPRC.single.over.classes(ann, S, folds=folds, seed=seed);
+	AUC.flat <- AUROC.single.over.classes(ann, S, folds=folds, seed=seed);
+	PXR.flat <- PXR.at.multiple.recall.levels.over.classes(ann, S, rec.levels=rec.levels, folds=folds, seed=seed);
+	FMM.flat <- compute.Fmeasure.multilabel(ann, S, n.round=n.round, f.criterion=f.criterion, verbose=FALSE, 
+		b.per.example=TRUE, folds=folds, seed=seed);
+
+	## Obozinski's Hierarchical Heuristic Methods 
+	if(heuristic.fun=="AND")
+		S <- heuristicAND(S, g, root);
+	if(heuristic.fun=="MAX")
+		S <- heuristicMAX(S, g, root);
+	if(heuristic.fun=="OR")
+		S <- heuristicOR(S, g, root);
 	
-	## Computing Hierarchical Performances
-	## Hierarchical AUC (average and per.class) computed by precrec package
-	AUC.hier <- AUROC.single.over.classes(ann, S); gc();
-
-	## Hierarchical PxR at fixed recall levels 
-	PXR.hier <- precision.at.multiple.recall.level.over.classes(ann, S); gc();
-
-	## Computing Hierarchical Examples-Measures 
-	FMM.hier <- find.best.f(ann, S, n.round=n.round, f.criterion =f.criterion, verbose=FALSE, b.per.example=TRUE);
-
-	## Hierarchical PRC (average and per.class) computed by precrec package
-	PRC.hier <- AUPRC.single.over.classes(ann, S); 
+	## Compute HIER PRC, AUC, PXR (average and per class) FMM (average and per-example) one-shoot or cross-validated 
+	PRC.hier <- AUPRC.single.over.classes(ann, S, folds=folds, seed=seed);
+	AUC.hier <- AUROC.single.over.classes(ann, S, folds=folds, seed=seed);
+	PXR.hier <- PXR.at.multiple.recall.levels.over.classes(ann, S, rec.levels=rec.levels, folds=folds, seed=seed);
+	FMM.hier <- compute.Fmeasure.multilabel(ann, S, n.round=n.round, f.criterion=f.criterion, verbose=FALSE, 
+		b.per.example=TRUE, folds=folds, seed=seed);
 
 	## storing the hierarchical matrix
 	S.hier <- S;
-	rm(S); gc();
+	rm(S); 
 
 	## Storing Results #########
-	if(heuristic.fun=="AND"){
+	if(heuristic.fun=="AND")
 		heuristic.name <- "AND";
-	}else if(heuristic.fun=="MAX"){
+	if(heuristic.fun=="MAX")
 		heuristic.name <- "MAX";
-	}else if(heuristic.fun=="OR"){
+	if(heuristic.fun=="OR")
 		heuristic.name <- "OR";
-	}
+	
 	if(norm){
 		save(S.hier, file=paste0(hierScore.dir, flat.file, ".hierScores",heuristic.name,".rda"), compress=TRUE);
-		save(AUC.flat, AUC.hier, file=paste0(perf.dir, "AUC.", flat.file, ".hierScores.",heuristic.name,".rda"), compress=TRUE);
-		save(PXR.flat, PXR.hier, file=paste0(perf.dir, "PXR.", flat.file, ".hierScores.",heuristic.name,".rda"), compress=TRUE);
-		save(FMM.flat, FMM.hier, file=paste0(perf.dir, "FMM.", flat.file, ".hierScores.",heuristic.name,".rda"), compress=TRUE);
-		save(PRC.flat, PRC.hier, file=paste0(perf.dir, "PRC.", flat.file, ".hierScores.",heuristic.name,".rda"), compress=TRUE);
+		save(PRC.flat, PRC.hier, AUC.flat, AUC.hier, PXR.flat, PXR.hier, FMM.flat, FMM.hier, 
+			file=paste0(perf.dir, "PerfMeas.", flat.file, ".hierScores.",heuristic.name,".rda"), compress=TRUE);
 	}else{
-		save(S.hier, file=paste0(hierScore.dir, norm.type,".", flat.file, ".hierScores.",heuristic.name,".rda"), compress=TRUE);	
-		save(AUC.flat, AUC.hier, file=paste0(perf.dir, "AUC.", norm.type,".", flat.file, ".hierScores.",heuristic.name,".rda"), compress=TRUE);	
-		save(PXR.flat, PXR.hier, file=paste0(perf.dir, "PXR.", norm.type,".", flat.file, ".hierScores.",heuristic.name,".rda"), compress=TRUE);	
-		save(FMM.flat, FMM.hier, file=paste0(perf.dir, "FMM.", norm.type,".", flat.file, ".hierScores.",heuristic.name,".rda"), compress=TRUE);
-		save(PRC.flat, PRC.hier, file=paste0(perf.dir, "PRC.", norm.type,".", flat.file, ".hierScores.",heuristic.name,".rda"), compress=TRUE);
+		save(S.hier, file=paste0(hierScore.dir, norm.type, ".", flat.file, ".hierScores.",heuristic.name,".rda"), compress=TRUE);	
+		save(PRC.flat, PRC.hier, AUC.flat, AUC.hier, PXR.flat, PXR.hier, FMM.flat, FMM.hier,
+			file=paste0(perf.dir, "PerfMeas.", norm.type, ".", flat.file, ".hierScores.",heuristic.name,".rda"), compress=TRUE);	
 	}
 }
 
 #' @title Do Heuristic Methods holdout
 #' @description High level function to compute the hierarchical heuristic methods MAX, AND, OR (Heuristic Methods MAX, AND, OR (\cite{Obozinski et al., 
 #' Genome Biology, 2008}) applying a classical holdout procedure
+#' @details The function check if the number of classes between the flat scores matrix and the annotations matrix mismatched
+#' (e.g. some terms might be removed from the flat scores matrix before applying an hierarchy-unaware algorithm). 
+#' If so, the number of classes of the annotations matrix is narrowed to the number of terms of the flat scores matrix and
+#' the corresponding subgraph is computed as well.
 #' @param heuristic.fun can be one of the following three values:
 #' \enumerate{
 #' 	\item "MAX": run the heuristic method MAX;
@@ -301,6 +312,19 @@ Do.heuristic.methods <- function(heuristic.fun="AND", norm=TRUE, norm.type= "NON
 #'  \item \code{MaxNorm}: each score is divided for the maximum of each class;
 #'  \item \code{Qnorm}: quantile normalization. \pkg{preprocessCore} package is used. 
 #'  }
+#' @param folds number of folds of the cross validation on which computing the performance metrics averaged across folds (\code{def. 5}).
+#' If \code{folds=NULL}, the performance metrics are computed one-shot, otherwise the performance metrics are averaged across folds.
+#' @param seed initialization seed for the random generator to create folds (\code{def. 23}). If \code{NULL} folds are generated without seed 
+#' initialization. 
+#' @param n.round number of rounding digits to be applied to the hierarchical scores matrix (\code{def. 3}). It is used for choosing 
+#' the best threshold on the basis of the best F-measure
+#' @param f.criterion character. Type of F-measure to be used to select the best F-measure. Two possibilities:
+#' \enumerate{
+#' \item \code{F} (def.): corresponds to the harmonic mean between the average precision and recall
+#' \item \code{avF}: corresponds to the per-example \code{F-score} averaged across all the examples
+#' }
+#' @param rec.levels a vector with the desired recall levels (\code{def:} \code{from:0.1}, \code{to:0.9}, \code{by:0.1}) to compute the 
+#' the Precision at fixed Recall level (PXR)
 #' @param flat.file name of the file containing the flat scores matrix to be normalized or already normalized (without rda extension)
 #' @param ann.file name of the file containing the the label matrix of the examples (without rda extension)
 #' @param dag.file name of the file containing the graph that represents the hierarchy of the classes (without rda extension)
@@ -310,30 +334,20 @@ Do.heuristic.methods <- function(heuristic.fun="AND", norm=TRUE, norm.type= "NON
 #' @param flat.dir relative path where flat scores matrix is stored
 #' @param ann.dir relative path where annotation matrix is stored
 #' @param dag.dir relative path where graph is stored
-#' @param flat.norm.dir relative path where flat normalized scores matrix must be strored. Use this parameter if and only if \code{norm} is
-#' set to \code{FALSE}, otherwise set \code{flat.norm.dir} to \code{NULL} (def.)
-#' @param n.round number of rounding digits to be applied to the hierarchical scores matrix (\code{def. 3}). It is used for choosing 
-#' the best threshold on the basis of the best F-measure
-#' @param f.criterion character. Type of F-measure to be used to select the best F-measure. Two possibilities:
-#' \enumerate{
-#' \item \code{F} (def.): corresponds to the harmonic mean between the average precision and recall
-#' \item \code{avF}: corresponds to the per-example \code{F-score} averaged across all the examples
-#' }
 #' @param hierScore.dir relative path where the hierarchical scores matrix must be stored
 #' @param perf.dir relative path where the term-centric and protein-centric measures must be stored
-#' @return Five \code{rda} files stored in the rispective output directories:
+#' @return Two \code{rda} files stored in the respective output directories:
 #' \enumerate{
-#' \item \code{hierarchical scores matrix}: a matrix with examples on rows and classes on columns representing the computed hierarchical scores 
-#' for each example and for each considered class. This file is stored in \code{hierScore.dir} directory.
-#' \item \code{FMM} (F-Measure Multilabel) \code{results}: \code{F-score} computed by \code{find.best.f} function. 
-#' Both \emph{flat} and \emph{hierarchical} results are reported. This file is stored in \code{perf.dir} directory.
-#' \item \code{PRC} (area under Precision-Recall Curve) \code{results}: \code{PRC} computed by \pkg{precrec} package. 
-#' Both \emph{flat} and \emph{hierarchical} results are reported. This file is stored in \code{perf.dir} directory.
-#' \item \code{AUC} (Area Under ROC Curve) \code{results}: \code{AUC} computed by \pkg{precrec} package. 
-#' Both \emph{flat} and \emph{hierarchical} results are reported. This file is stored in \code{perf.dir} directory.
-#' \item \code{PXR} (Precision at fixed Recall levels) average and per classes: \code{PXR} computed by \pkg{PerfMeas} package. 
-#' It is stored in \code{perf.dir} directory.
-#' }
+#' 	\item \code{Hierarchical Scores Results}: a matrix with examples on rows and classes on columns representing the computed hierarchical scores 
+#' 	for each example and for each considered class. It is stored in the \code{hierScore.dir} directory.
+#' 	\item \code{Performance Measures}: \emph{flat} and \emph{hierarchical} performace results:
+#' 	\enumerate{
+#' 		\item AUPRC results computed though \code{AUPRC.single.over.classes} (\code{\link{AUPRC}});
+#'		\item AUROC results computed through \code{AUROC.single.over.classes} (\code{\link{AUROC}}); 
+#' 		\item PXR results computed though \code{PXR.at.multiple.recall.levels.over.classes} (\code{\link{PXR}});
+#' 		\item FMM results computed though \code{compute.Fmeasure.multilabel} (\code{\link{FMM}}); 
+#' }}
+#' It is stored in the \code{perf.dir} directory.
 #' @export
 #' @examples
 #' data(graph);
@@ -350,129 +364,120 @@ Do.heuristic.methods <- function(heuristic.fun="AND", norm=TRUE, norm.type= "NON
 #' save(L,file="data/labels.rda");
 #' save(S,file="data/scores.rda");
 #' save(test.index, file="data/test.index.rda");
-#' ind.dir <- dag.dir <- flat.dir <- flat.norm.dir <- ann.dir <- "data/";
+#' ind.dir <- dag.dir <- flat.dir <- ann.dir <- "data/";
 #' hierScore.dir <- perf.dir <- "results/";
+#' rec.levels <- seq(from=0.1, to=1, by=0.1);
 #' ind.test.set <- "test.index";
 #' dag.file <- "graph";
 #' flat.file <- "scores";
 #' ann.file <- "labels";
-#' Do.heuristic.methods.holdout(heuristic.fun="MAX", norm=FALSE, 
-#' norm.type="MaxNorm", flat.file=flat.file, ann.file=ann.file, dag.file=dag.file, 
+#' Do.heuristic.methods.holdout(heuristic.fun="MAX", norm=FALSE, norm.type="MaxNorm", 
+#' folds=NULL, seed=23, n.round=3, f.criterion ="F", rec.levels=rec.levels,
+#' flat.file=flat.file, ann.file=ann.file, dag.file=dag.file, 
 #' ind.test.set=ind.test.set, ind.dir=ind.dir, flat.dir=flat.dir, ann.dir=ann.dir, 
-#' dag.dir=dag.dir, flat.norm.dir=flat.norm.dir, n.round=3, f.criterion="F", 
-#' hierScore.dir=hierScore.dir, perf.dir=perf.dir);
-Do.heuristic.methods.holdout <- function(heuristic.fun="AND", norm=TRUE, norm.type= "NONE", flat.file=flat.file, 
-	ann.file=ann.file, dag.file=dag.file, ind.test.set=ind.test.set, ind.dir=ind.dir, flat.dir=flat.dir, ann.dir=ann.dir, 
-	dag.dir=dag.dir, flat.norm.dir=NULL, n.round=3, f.criterion ="F", hierScore.dir=hierScore.dir, perf.dir=perf.dir){
+#' dag.dir=dag.dir, hierScore.dir=hierScore.dir, perf.dir=perf.dir);
+Do.heuristic.methods.holdout <- function(heuristic.fun="AND", norm=TRUE, norm.type=NULL, folds=5, seed=23, 
+	n.round=3, f.criterion ="F", rec.levels=seq(from=0.1, to=1, by=0.1), flat.file=flat.file, ann.file=ann.file, 
+	dag.file=dag.file, ind.test.set=ind.test.set, ind.dir=ind.dir, flat.dir=flat.dir, ann.dir=ann.dir, 
+	dag.dir=dag.dir, hierScore.dir=hierScore.dir, perf.dir=perf.dir){
 
 	## Setting Check
-	if(heuristic.fun!="MAX" && heuristic.fun!="AND" && heuristic.fun!="OR"){
-		stop("The chosen heuristic method is not among those available or it was misspelled");
-	}
-	if(norm==FALSE && length(norm.type)==0){
-		stop("If norm is set to FALSE, you need also to specify a normalization method among those available")
-	}
-	if(norm==TRUE && length(norm.type)!=0){
-		stop("If norm is set to TRUE, the input flat matrix is already normalized. Set norm.type' to NULL (without quote)")
-	}
-	
-	## Loading Data ############
-	# loading examples indices of the test set
+	if(heuristic.fun!="MAX" && heuristic.fun!="AND" && heuristic.fun!="OR")
+		stop("HEURISTIC: the chosen heuristic method is not among those available or it has been misspelled", call.=FALSE);
+	if(norm==FALSE && is.null(norm.type))
+		stop("HEURISTIC: If norm is set to FALSE, you need also to specify a normalization method among those available", call.=FALSE);
+	if(norm==TRUE && !is.null(norm.type))
+		warning("HEURISTIC: If norm is set to TRUE, the input flat matrix is already normalized.", 
+			paste0(" Set norm.type to NULL and not to '", norm.type, "' to avoid this warning message"), call.=FALSE);
+		
+	## Loading Data
+	## loading examples indices of the test set
 	ind.set <- paste0(ind.dir, ind.test.set, ".rda");
 	ind.test <- get(load(ind.set));
 
 	## loading dag
 	dag.path <- paste0(dag.dir, dag.file,".rda");
 	g <- get(load(dag.path));
-	
-	##root node
+	## compute root node 
 	root <- root.node(g);
-
-	## loading flat scores matrix relative to a specific subontology
-	flat.path <- paste0(flat.dir, flat.file,".rda");
-	if(norm){
-		S <- get(load(flat.path));
-		gc();	##in order to save ram memory..
-
-		## removing root node from flat norm matrix if it exists
-		if(root %in% colnames(S)){
-			S <- S[,-which(colnames(S)==root)];
-		}
-	}else{
-		Do.FLAT.scores.normalization(norm.type=norm.type, flat.file=flat.file, dag.file=dag.file, flat.dir=flat.dir, 
-			dag.dir=dag.dir, flat.norm.dir=flat.norm.dir);
-		flat.path <- paste0(flat.norm.dir, norm.type,".",flat.file,".rda");
-		S <- get(load(flat.path));
-	}
-
-	## shrinking the size of S to the examples of test set
-	S <- S[ind.test,];
 
 	## loading annotation matrix
 	ann.path <- paste0(ann.dir, ann.file,".rda");
 	ann <- get(load(ann.path));
+	## removing root node from annotation table if it exists
+	if(root %in% colnames(ann))
+		ann <- ann[,-which(colnames(ann)==root)];
 
-	## removing root node from annotation table and shrinking the size of annotation table to the examples of test set
-	ann <- ann[ind.test,-which(colnames(ann)==root)];
+	## loading flat matrix
+	flat.path <- paste0(flat.dir, flat.file,".rda");
+	if(norm){
+		S <- get(load(flat.path));
+		## removing root node from flat norm matrix if it exists
+		if(root %in% colnames(S))
+			S <- S[,-which(colnames(S)==root)];
+	}else{
+		S <- get(load(flat.path));
+		S <- scores.normalization(norm.type=norm.type, S);
+		cat(norm.type, "NORMALIZATION: DONE", "\n");
+		## removing root node from flat norm matrix if it exists
+		if(root %in% colnames(S))
+			S <- S[,-which(colnames(S)==root)];
+	}
 
-	## Computing FLAT Performances
-	## FLAT AUC computed by precrec package
-	AUC.flat <- AUROC.single.over.classes(ann, S); 	
-			
-	## FLAT PxRs computed by PerfMeas pacakge
-	PXR.flat <- precision.at.multiple.recall.level.over.classes(ann, S);
+	## check if |flat matrix classes| = |annotation matrix classes| 
+	## if not the classes of annotation matrix are shrinked to those of flat matrix
+	class.check <- ncol(S)!=ncol(ann);
+	if(class.check){
+		ann <- ann[,colnames(S)];
+		nd <- colnames(S);
+		g <- do.subgraph(nd, g, edgemode="directed");
+	}
 
-	## F.measure: Computing Flat Examples-Measures 
-	FMM.flat <- find.best.f(ann, S, n.round=n.round, f.criterion=f.criterion, verbose=FALSE, b.per.example=TRUE); 
+	## scores flat matrix shrinked to test test
+	S <- S[ind.test,];
+	
+	## annotation table  shrinked to test test 
+	ann <- ann[ind.test,];
 
-	## FLAT PRC computed by precrec package 
-	PRC.flat <- AUPRC.single.over.classes(ann, S);  
+	## Compute FLAT PRC, AUC, PXR (average and per class) FMM (average and per-example) one-shoot or cross-validated 
+	PRC.flat <- AUPRC.single.over.classes(ann, S, folds=folds, seed=seed);
+	AUC.flat <- AUROC.single.over.classes(ann, S, folds=folds, seed=seed);
+	PXR.flat <- PXR.at.multiple.recall.levels.over.classes(ann, S, rec.levels=rec.levels, folds=folds, seed=seed);
+	FMM.flat <- compute.Fmeasure.multilabel(ann, S, n.round=n.round, f.criterion=f.criterion, verbose=FALSE,
+		b.per.example=TRUE, folds=folds, seed=seed);
 
-	## Obozinski's Hierarchical Heuristic Methods ####################
-	if(heuristic.fun=="AND"){
+	## Obozinski's Hierarchical Heuristic Methods 
+	if(heuristic.fun=="AND")
 		S <- heuristicAND(S, g, root);
-	}else if(heuristic.fun=="MAX"){
+	if(heuristic.fun=="MAX")
 		S <- heuristicMAX(S, g, root);
-	}else if(heuristic.fun=="OR"){
+	if(heuristic.fun=="OR")
 		S <- heuristicOR(S, g, root);
-	}
 	
-	## Computing Hier Performances
-	## Hierarchical AUC (average and per.class) computed by precrec package
-	AUC.hier <- AUROC.single.over.classes(ann, S); 
-		
-	## Hierarchical PxR at fixed recall levels 
-	PXR.hier <- precision.at.multiple.recall.level.over.classes(ann, S); 
-
-	## Computing Hierarchical Examples-Measures 
-	FMM.hier <- find.best.f(ann, S, n.round=n.round, f.criterion =f.criterion, verbose=FALSE, b.per.example=TRUE);	
-
-	## Hierarchical PRC (average and per.class) computed by precrec package
-	PRC.hier <- AUPRC.single.over.classes(ann, S);  
-
-	## storing the hierarchical matrix
+	## Compute HIER PRC, AUC, PXR (average and per class) FMM (average and per-example) one-shoot or cross-validated 
+	PRC.hier <- AUPRC.single.over.classes(ann, S, folds=folds, seed=seed);
+	AUC.hier <- AUROC.single.over.classes(ann, S, folds=folds, seed=seed);
+	PXR.hier <- PXR.at.multiple.recall.levels.over.classes(ann, S, rec.levels=rec.levels, folds=folds, seed=seed);
+	FMM.hier <- compute.Fmeasure.multilabel(ann, S, n.round=n.round, f.criterion=f.criterion, verbose=FALSE, 
+		b.per.example=TRUE, folds=folds, seed=seed);
 	S.hier <- S;
-	rm(S); gc();
+	rm(S);
 	
-	## Storing Results #########
-	if(heuristic.fun=="AND"){
+	## Storing Results 
+	if(heuristic.fun=="AND")
 		heuristic.name <- "AND";
-	}else if(heuristic.fun=="MAX"){
+	if(heuristic.fun=="MAX")
 		heuristic.name <- "MAX";
-	}else if(heuristic.fun=="OR"){
+	if(heuristic.fun=="OR")
 		heuristic.name <- "OR";
-	}
+
 	if(norm){
 		save(S.hier, file=paste0(hierScore.dir, flat.file, ".hierScores",heuristic.name,".holdout.rda"), compress=TRUE);
-		save(AUC.flat, AUC.hier, file=paste0(perf.dir, "AUC.", flat.file, ".hierScores.",heuristic.name,".holdout.rda"), compress=TRUE);
-		save(PXR.flat, PXR.hier, file=paste0(perf.dir, "PXR.", flat.file, ".hierScores.",heuristic.name,".holdout.rda"), compress=TRUE);
-		save(FMM.flat, FMM.hier, file=paste0(perf.dir, "FMM.", flat.file, ".hierScores.",heuristic.name,".holdout.rda"), compress=TRUE);
-		save(PRC.flat, PRC.hier, file=paste0(perf.dir, "PRC.", flat.file, ".hierScores.",heuristic.name,".holdout.rda"), compress=TRUE);
+		save(PRC.flat, PRC.hier, AUC.flat, AUC.hier, PXR.flat, PXR.hier, FMM.flat, FMM.hier,
+			file=paste0(perf.dir, "PerfMeas.", flat.file, ".hierScores.",heuristic.name,".holdout.rda"), compress=TRUE);
 	}else{
 		save(S.hier, file=paste0(hierScore.dir, norm.type,".", flat.file, ".hierScores.",heuristic.name,".holdout.rda"), compress=TRUE);	
-		save(AUC.flat, AUC.hier, file=paste0(perf.dir, "AUC.", norm.type,".", flat.file, ".hierScores.",heuristic.name,".holdout.rda"), compress=TRUE);	
-		save(PXR.flat, PXR.hier, file=paste0(perf.dir, "PXR.", norm.type,".", flat.file, ".hierScores.",heuristic.name,".holdout.rda"), compress=TRUE);	
-		save(FMM.flat, FMM.hier, file=paste0(perf.dir, "FMM.", norm.type,".", flat.file, ".hierScores.",heuristic.name,".holdout.rda"), compress=TRUE);
-		save(PRC.flat, PRC.hier, file=paste0(perf.dir, "PRC.", norm.type,".", flat.file, ".hierScores.",heuristic.name,".holdout.rda"), compress=TRUE);
+		save(PRC.flat, PRC.hier, AUC.flat, AUC.hier, PXR.flat, PXR.hier, FMM.flat, FMM.hier,
+			file=paste0(perf.dir, "PerfMeas.", norm.type,".", flat.file, ".hierScores.",heuristic.name,".holdout.rda"), compress=TRUE);	
 	}
 }

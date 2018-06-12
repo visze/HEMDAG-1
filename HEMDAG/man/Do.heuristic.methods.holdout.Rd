@@ -5,11 +5,12 @@
 \title{Do Heuristic Methods holdout}
 \usage{
 Do.heuristic.methods.holdout(heuristic.fun = "AND", norm = TRUE,
-  norm.type = "NONE", flat.file = flat.file, ann.file = ann.file,
-  dag.file = dag.file, ind.test.set = ind.test.set, ind.dir = ind.dir,
-  flat.dir = flat.dir, ann.dir = ann.dir, dag.dir = dag.dir,
-  flat.norm.dir = NULL, n.round = 3, f.criterion = "F",
-  hierScore.dir = hierScore.dir, perf.dir = perf.dir)
+  norm.type = NULL, folds = 5, seed = 23, n.round = 3,
+  f.criterion = "F", rec.levels = seq(from = 0.1, to = 1, by = 0.1),
+  flat.file = flat.file, ann.file = ann.file, dag.file = dag.file,
+  ind.test.set = ind.test.set, ind.dir = ind.dir, flat.dir = flat.dir,
+  ann.dir = ann.dir, dag.dir = dag.dir, hierScore.dir = hierScore.dir,
+  perf.dir = perf.dir)
 }
 \arguments{
 \item{heuristic.fun}{can be one of the following three values:
@@ -32,6 +33,24 @@ Do.heuristic.methods.holdout(heuristic.fun = "AND", norm = TRUE,
 \item \code{Qnorm}: quantile normalization. \pkg{preprocessCore} package is used. 
 }}
 
+\item{folds}{number of folds of the cross validation on which computing the performance metrics averaged across folds (\code{def. 5}).
+If \code{folds=NULL}, the performance metrics are computed one-shot, otherwise the performance metrics are averaged across folds.}
+
+\item{seed}{initialization seed for the random generator to create folds (\code{def. 23}). If \code{NULL} folds are generated without seed 
+initialization.}
+
+\item{n.round}{number of rounding digits to be applied to the hierarchical scores matrix (\code{def. 3}). It is used for choosing 
+the best threshold on the basis of the best F-measure}
+
+\item{f.criterion}{character. Type of F-measure to be used to select the best F-measure. Two possibilities:
+\enumerate{
+\item \code{F} (def.): corresponds to the harmonic mean between the average precision and recall
+\item \code{avF}: corresponds to the per-example \code{F-score} averaged across all the examples
+}}
+
+\item{rec.levels}{a vector with the desired recall levels (\code{def:} \code{from:0.1}, \code{to:0.9}, \code{by:0.1}) to compute the 
+the Precision at fixed Recall level (PXR)}
+
 \item{flat.file}{name of the file containing the flat scores matrix to be normalized or already normalized (without rda extension)}
 
 \item{ann.file}{name of the file containing the the label matrix of the examples (without rda extension)}
@@ -49,40 +68,33 @@ matrix to be used in the    test set}
 
 \item{dag.dir}{relative path where graph is stored}
 
-\item{flat.norm.dir}{relative path where flat normalized scores matrix must be strored. Use this parameter if and only if \code{norm} is
-set to \code{FALSE}, otherwise set \code{flat.norm.dir} to \code{NULL} (def.)}
-
-\item{n.round}{number of rounding digits to be applied to the hierarchical scores matrix (\code{def. 3}). It is used for choosing 
-the best threshold on the basis of the best F-measure}
-
-\item{f.criterion}{character. Type of F-measure to be used to select the best F-measure. Two possibilities:
-\enumerate{
-\item \code{F} (def.): corresponds to the harmonic mean between the average precision and recall
-\item \code{avF}: corresponds to the per-example \code{F-score} averaged across all the examples
-}}
-
 \item{hierScore.dir}{relative path where the hierarchical scores matrix must be stored}
 
 \item{perf.dir}{relative path where the term-centric and protein-centric measures must be stored}
 }
 \value{
-Five \code{rda} files stored in the rispective output directories:
+Two \code{rda} files stored in the respective output directories:
 \enumerate{
-\item \code{hierarchical scores matrix}: a matrix with examples on rows and classes on columns representing the computed hierarchical scores 
-for each example and for each considered class. This file is stored in \code{hierScore.dir} directory.
-\item \code{FMM} (F-Measure Multilabel) \code{results}: \code{F-score} computed by \code{find.best.f} function. 
-Both \emph{flat} and \emph{hierarchical} results are reported. This file is stored in \code{perf.dir} directory.
-\item \code{PRC} (area under Precision-Recall Curve) \code{results}: \code{PRC} computed by \pkg{precrec} package. 
-Both \emph{flat} and \emph{hierarchical} results are reported. This file is stored in \code{perf.dir} directory.
-\item \code{AUC} (Area Under ROC Curve) \code{results}: \code{AUC} computed by \pkg{precrec} package. 
-Both \emph{flat} and \emph{hierarchical} results are reported. This file is stored in \code{perf.dir} directory.
-\item \code{PXR} (Precision at fixed Recall levels) average and per classes: \code{PXR} computed by \pkg{PerfMeas} package. 
-It is stored in \code{perf.dir} directory.
-}
+	\item \code{Hierarchical Scores Results}: a matrix with examples on rows and classes on columns representing the computed hierarchical scores 
+	for each example and for each considered class. It is stored in the \code{hierScore.dir} directory.
+	\item \code{Performance Measures}: \emph{flat} and \emph{hierarchical} performace results:
+	\enumerate{
+		\item AUPRC results computed though \code{AUPRC.single.over.classes} (\code{\link{AUPRC}});
+	\item AUROC results computed through \code{AUROC.single.over.classes} (\code{\link{AUROC}}); 
+		\item PXR results computed though \code{PXR.at.multiple.recall.levels.over.classes} (\code{\link{PXR}});
+		\item FMM results computed though \code{compute.Fmeasure.multilabel} (\code{\link{FMM}}); 
+}}
+It is stored in the \code{perf.dir} directory.
 }
 \description{
 High level function to compute the hierarchical heuristic methods MAX, AND, OR (Heuristic Methods MAX, AND, OR (\cite{Obozinski et al., 
 Genome Biology, 2008}) applying a classical holdout procedure
+}
+\details{
+The function check if the number of classes between the flat scores matrix and the annotations matrix mismatched
+(e.g. some terms might be removed from the flat scores matrix before applying an hierarchy-unaware algorithm). 
+If so, the number of classes of the annotations matrix is narrowed to the number of terms of the flat scores matrix and
+the corresponding subgraph is computed as well.
 }
 \examples{
 data(graph);
@@ -99,15 +111,16 @@ save(g,file="data/graph.rda");
 save(L,file="data/labels.rda");
 save(S,file="data/scores.rda");
 save(test.index, file="data/test.index.rda");
-ind.dir <- dag.dir <- flat.dir <- flat.norm.dir <- ann.dir <- "data/";
+ind.dir <- dag.dir <- flat.dir <- ann.dir <- "data/";
 hierScore.dir <- perf.dir <- "results/";
+rec.levels <- seq(from=0.1, to=1, by=0.1);
 ind.test.set <- "test.index";
 dag.file <- "graph";
 flat.file <- "scores";
 ann.file <- "labels";
-Do.heuristic.methods.holdout(heuristic.fun="MAX", norm=FALSE, 
-norm.type="MaxNorm", flat.file=flat.file, ann.file=ann.file, dag.file=dag.file, 
+Do.heuristic.methods.holdout(heuristic.fun="MAX", norm=FALSE, norm.type="MaxNorm", 
+folds=NULL, seed=23, n.round=3, f.criterion ="F", rec.levels=rec.levels,
+flat.file=flat.file, ann.file=ann.file, dag.file=dag.file, 
 ind.test.set=ind.test.set, ind.dir=ind.dir, flat.dir=flat.dir, ann.dir=ann.dir, 
-dag.dir=dag.dir, flat.norm.dir=flat.norm.dir, n.round=3, f.criterion="F", 
-hierScore.dir=hierScore.dir, perf.dir=perf.dir);
+dag.dir=dag.dir, hierScore.dir=hierScore.dir, perf.dir=perf.dir);
 }
