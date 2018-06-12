@@ -44,6 +44,9 @@ Two different outputs respect to the input parameter \code{b.per.example}:
 \description{
 Method for computing Precision, Recall, Specificity, Accuracy and F-measure for multiclass and multilabel classification
 }
+\details{
+Names of rows and columns of \code{target} and \code{predicted} matrix must be provided in the same order, otherwise a stop message is returned
+}
 \examples{
 data(labels);
 data(scores);

@@ -38,12 +38,17 @@ If \code{seed}\eqn{\neq}\code{NULL} and \code{folds=NULL}, the AUROC averaged ac
 Function to compute the Area under the ROC Curve through \pkg{precrec} package
 }
 \details{
-The AUROC (for a single class or for a set of classes) is computed either one-shot or averaged across stratified folds.\cr
-\code{AUROC.single.class} computes the AUROC just for a given class.\cr
-\code{AUROC.single.over.classes} computes the AUROC for a set of classes, including their average values across all the classes.\cr
+The AUROC (for a single class or for a set of classes) is computed either one-shot or averaged across stratified folds.
+
+\code{AUROC.single.class} computes the AUROC just for a given class.
+
+\code{AUROC.single.over.classes} computes the AUROC for a set of classes, including their average values across all the classes.
+
 For all those classes having zero annotations, the AUROC is set to 0.5. These classes are included in the computing of the AUROC 
 averaged across classes, both when the AUROC is computed one-shot or averaged across stratified folds.
+
 The AUROC is set to 0.5 to all those classes having zero annotations.
+Names of rows and columns of \code{labels} and \code{predicted} must be provided in the same order, otherwise a stop message is returned
 }
 \examples{
 data(labels);

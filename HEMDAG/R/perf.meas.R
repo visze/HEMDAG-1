@@ -6,11 +6,12 @@
 #' @aliases AUPRC.single.over.classes
 #' @title AUPRC measures
 #' @description Function to compute Area under the Precision Recall Curve (AUPRC) through \pkg{precrec} package
-#' @details The AUPRC (for a single class or for a set of classes) is computed either one-shot or averaged across stratified folds.\cr
-#' \code{AUPRC.single.class} computes the AUPRC just for a given class.\cr
-#' \code{AUPR.single.over.classes} computes the AUPRC for a set of classes, including their average values across all the classes.\cr
-#' For all those classes having zero annotations, the AUPRC is set to 0. These classes are discarded in the computing of the AUPRC   
+#' @details The AUPRC (for a single class or for a set of classes) is computed either one-shot or averaged across stratified folds.
+#' @details \code{AUPRC.single.class} computes the AUPRC just for a given class.
+#' @details \code{AUPR.single.over.classes} computes the AUPRC for a set of classes, including their average values across all the classes.
+#' @details For all those classes having zero annotations, the AUPRC is set to 0. These classes are discarded in the computing of the AUPRC   
 #' averaged across classes, both when the AUPRC is computed one-shot or averaged across stratified folds.
+#' @details Names of rows and columns of \code{labels} and \code{predicted} matrix must be provided in the same order, otherwise a stop message is returned
 #' @param folds number of folds on which computing the AUPRC. If \code{folds=NULL} (\code{def.}), the one-shot AUPRC is computed, 
 #' otherwise the AUPRC is computed averaged across folds.
 #' @param seed initialization seed for the random generator to create folds. Set \code{seed} only if \code{folds}\eqn{\neq}\code{NULL}.
@@ -46,7 +47,7 @@ AUPRC.single.class <- function(target, pred, folds=NULL, seed=NULL){
 	if(is.null(folds) && !is.null(seed))
 		seed <- NULL;
 	if(!is.null(folds) && is.null(seed))
-		warning("AUPRC.single.class: folds are generated without seed initialization", call.=FALSE);
+		warning("AUPRC.single.class: folds are generated without seed initialization", call.=FALSE);		
 	## degenerate case when all labels are equals
 	if((all(target==0)) || (all(target==1))){
 		if(!is.null(folds)){
@@ -119,6 +120,8 @@ AUPRC.single.over.classes <- function(labels, predicted, folds=NULL, seed=NULL){
 		stop("AUPRC.single.over.classes: labels variable must take values 0 or 1", call.=FALSE);
 	if(is.null(folds) && !is.null(seed))
 		seed <- NULL;
+	if(any(colnames(labels)!=colnames(predicted)) || any(rownames(labels)!=rownames(predicted)))
+		stop("AUPRC.single.over.classes: rows or columns names of 'labels' and 'predicted' are not in the same order. They must be provided in the same order");
 	## AUPRC averaged across folds over classes
 	if(!is.null(folds)){
 		PRC.class <- rep(0,ncol(predicted));
@@ -186,12 +189,13 @@ AUPRC.single.over.classes <- function(labels, predicted, folds=NULL, seed=NULL){
 #' @aliases AUROC.single.over.classes
 #' @title AUROC measures
 #' @description Function to compute the Area under the ROC Curve through \pkg{precrec} package
-#' @details The AUROC (for a single class or for a set of classes) is computed either one-shot or averaged across stratified folds.\cr
-#' \code{AUROC.single.class} computes the AUROC just for a given class.\cr
-#' \code{AUROC.single.over.classes} computes the AUROC for a set of classes, including their average values across all the classes.\cr
-#' For all those classes having zero annotations, the AUROC is set to 0.5. These classes are included in the computing of the AUROC 
+#' @details The AUROC (for a single class or for a set of classes) is computed either one-shot or averaged across stratified folds.
+#' @details \code{AUROC.single.class} computes the AUROC just for a given class.
+#' @details \code{AUROC.single.over.classes} computes the AUROC for a set of classes, including their average values across all the classes.
+#' @details For all those classes having zero annotations, the AUROC is set to 0.5. These classes are included in the computing of the AUROC 
 #' averaged across classes, both when the AUROC is computed one-shot or averaged across stratified folds.
-#' The AUROC is set to 0.5 to all those classes having zero annotations. 
+#' @details The AUROC is set to 0.5 to all those classes having zero annotations.
+#' Names of rows and columns of \code{labels} and \code{predicted} must be provided in the same order, otherwise a stop message is returned
 #' @param folds number of folds on which computing the AUROC. If \code{folds=NULL} (\code{def.}), the one-shot AUROC is computed, 
 #' otherwise the AUROC is computed averaged across folds.
 #' @param seed initialization seed for the random generator to create folds. Set \code{seed} only if \code{folds}\eqn{\neq}\code{NULL}.
@@ -294,6 +298,8 @@ AUROC.single.over.classes <- function(labels, predicted, folds=NULL, seed=NULL){
 		stop("AUROC.single.over.classes: labels variable must take values 0 or 1", call.=FALSE);
 	if(is.null(folds) && !is.null(seed))
 		seed <- NULL;
+	if(any(colnames(labels)!=colnames(predicted)) || any(rownames(labels)!=rownames(predicted)))
+		stop("AUROC.single.over.classes: rows or columns names of 'labels' and 'predicted' are not in the same order. They must be provided in the same order");
 	## AUROC averaged across folds over classes	
 	if(!is.null(folds)){
 		AUC.class <- rep(0,ncol(predicted));
@@ -351,6 +357,7 @@ AUROC.single.over.classes <- function(labels, predicted, folds=NULL, seed=NULL){
 #' @aliases F.measure.multilabel
 #' @title Multilabel F-measure 
 #' @description Method for computing Precision, Recall, Specificity, Accuracy and F-measure for multiclass and multilabel classification
+#' @details Names of rows and columns of \code{target} and \code{predicted} matrix must be provided in the same order, otherwise a stop message is returned
 #' @param target matrix with the target multilabels: rows correspond to examples and columns to classes.
 #' \eqn{target[i,j]=1} if example \eqn{i} belongs to class \eqn{j}, \eqn{target[i,j]=0} otherwise
 #' @param predicted a numeric matrix with discrete predicted values: rows correspond to examples and columns to classes.
@@ -398,7 +405,9 @@ setMethod("F.measure.multilabel", signature(target="matrix", predicted="matrix")
 			stop ("F.measure.multilabel: number of rows or columns do not match between target and predicted classes", call.=FALSE);
 		if(any((target!=0) & (target!=1)) || any((predicted!=0) & (predicted!=1)))
 			stop("F.measure.multilabel: target and predicted variables must take values 0 or 1", call.=FALSE);
-				
+		if(any(colnames(target)!=colnames(predicted)) || any(rownames(target)!=rownames(predicted)))
+		stop("F.measure.multilabel: rows or columns names of 'target' and 'predicted' are not in the same order. They must be provided in the same order");
+
 		z <- target + predicted;
 		TP <- apply(z, 1, function(x){
 			return(sum(x==2));
@@ -469,6 +478,7 @@ setMethod("F.measure.multilabel", signature(target="matrix", predicted="matrix")
 #' according to parameter \code{n.round} and all the values of \code{pred} are divided by \code{max(pred)}.
 #' Then all the thresholds corresponding to all the different values included in \code{pred} are attempted, and the threshold 
 #' leading to the maximum F-measure is selected.
+#' @details Names of rows and columns of \code{target} and \code{pred} matrix must be provided in the same order, otherwise a stop message is returned
 #' @param target matrix with the target multilabels: rows correspond to examples and columns to classes.
 #' \eqn{target[i,j]=1} if example \eqn{i} belongs to class \eqn{j}, \eqn{target[i,j]=0} otherwise
 #' @param pred a numeric matrix with continuous predicted values (scores): rows correspond to examples and columns to classes
@@ -517,7 +527,9 @@ find.best.f <- function(target, pred, n.round=3, f.criterion="F", verbose=TRUE, 
 		stop("find.best.f: number of rows or columns do not match between target and predicted classes", call.=FALSE);
 	if(any((target!=0) & (target!=1)))
 		stop("find.best.f: labels variable must take values 0 or 1", call.=FALSE);
-	
+	if(any(colnames(target)!=colnames(pred)) || any(rownames(target)!=rownames(pred)))
+		stop("find.best.f: rows or columns names of 'target' and 'pred' are not in the same order. They must be provided in the same order");
+
 	x <- apply(target,1,sum);
 	selected <- which(x>0);
 	##  degenerate case when target is a full-zero matrix (all genes without annotations)
@@ -577,6 +589,7 @@ find.best.f <- function(target, pred, n.round=3, f.criterion="F", verbose=TRUE, 
 #' @name FMM
 #' @title Compute Multilabel F-measure
 #' @description Function to compute the best hierarchical F-score either one-shot or averaged across folds
+#' @details Names of rows and columns of \code{target} and \code{pred} matrix must be provided in the same order, otherwise a stop message is returned
 #' @param target matrix with the target multilabels: rows correspond to examples and columns to classes.
 #' \eqn{target[i,j]=1} if example \eqn{i} belongs to class \eqn{j}, \eqn{target[i,j]=0} otherwise
 #' @param pred a numeric matrix with predicted values (scores): rows correspond to examples and columns to classes
@@ -633,7 +646,9 @@ compute.Fmeasure.multilabel <- function(target, pred, n.round=3, f.criterion="F"
 	if(is.null(folds) && !is.null(seed))
 		seed <- NULL;
 	if(!is.null(folds) && is.null(seed))
-		warning("compute.Fmeasure.multilabel: folds are generated without seed initialization", call.=FALSE);	
+		warning("compute.Fmeasure.multilabel: folds are generated without seed initialization", call.=FALSE);
+	if(any(colnames(target)!=colnames(pred)) || any(rownames(target)!=rownames(pred)))
+		stop("compute.Fmeasure.multilabel: rows or columns names of 'target' and 'pred' are not in the same order. They must be provided in the same order");
 	## FMM averaged across folds 
 	if(!is.null(folds)){
 		testIndex <- do.unstratified.cv.data(pred, kk=folds, seed=seed);
@@ -674,8 +689,9 @@ compute.Fmeasure.multilabel <- function(target, pred, n.round=3, f.criterion="F"
 #' @name PXR
 #' @title Precision at fixed Recall level
 #' @description Function to compute the Precision at fixed Recall levels (PXR) over classes through \pkg{PerfMeas} package
-#' @details The PXR across all classes is computed either one-shot or averaged across stratified folds
+#' @details The PXR across all classes is computed either one-shot or averaged across stratified folds.
 #' @details Function to compute the precision at fixed recall levels across all classes either one-shot or averaged across stratified folds
+#' @details Names of rows and columns of \code{target} and \code{pred} matrix must be provided in the same order, otherwise a stop message is returned
 #' @param target matrix with the target multilabels: rows correspond to examples and columns to classes. 
 #' \eqn{target[i,j]=1} if example \eqn{i} belongs to class \eqn{j}, \eqn{target[i,j]=0} otherwise.
 #' @param pred a numeric matrix with predicted values (scores): rows correspond to examples and columns to classes.
@@ -711,7 +727,10 @@ PXR.at.multiple.recall.levels.over.classes <- function(target, pred, rec.levels=
 	if(is.null(folds) && !is.null(seed))
 		seed <- NULL;
 	if(!is.null(folds) && is.null(seed))
-		warning("PXR.at.multiple.recall.levels.over.classes: folds are generated without seed initialization", call.=FALSE);	
+		warning("PXR.at.multiple.recall.levels.over.classes: folds are generated without seed initialization", call.=FALSE);
+	if(any(colnames(target)!=colnames(pred)) || any(rownames(target)!=rownames(pred)))
+		stop("PXR.at.multiple.recall.levels.over.classes: rows or columns names of 'target' and 'pred' are not in the same order. 
+			They must be provided in the same order");
 	## PXR averaged across folds
 	if(!is.null(folds)){
 		PXR <- c();

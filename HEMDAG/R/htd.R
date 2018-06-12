@@ -32,7 +32,7 @@
 htd <- function(S, g, root="00"){
 	levels <- graph.levels(g,root);
 
-	# a dummy root is added
+	# a dummy root is added if it does not exist
 	if(!(root %in% colnames(S))){
 		max.score <- max(S);
 		z <- rep(max.score,nrow(S));
@@ -68,10 +68,9 @@ htd <- function(S, g, root="00"){
 ##************##
 #' @title HTD-DAG vanilla
 #' @description High level function to correct the computed scores in a hierarchy according to the HTD-DAG algorithm
-#' @details The function check if the number of classes between the flat scores matrix and the annotations matrix mismatched
-#' (e.g. some terms might be removed from the flat scores matrix before applying an hierarchy-unaware algorithm). 
-#' If so, the number of classes of the annotations matrix is narrowed to the number of terms of the flat scores matrix and
-#' the corresponding subgraph is computed as well.
+#' @details The function checks if the number of classes between the flat scores matrix and the annotations matrix mismatched.
+#' If so, the number of terms of the annotations matrix is shrunk to the number of terms of the flat scores matrix and
+#' the corresponding subgraph is computed as well. N.B.: it is supposed that all the nodes of the subgraph are accessible from the root.
 #' @param norm boolean value: 
 #' \itemize{
 #' \item \code{TRUE} (def.): the flat scores matrix has been already normalized in according to a normalization method;	
@@ -155,13 +154,11 @@ Do.HTD <- function(norm=TRUE, norm.type=NULL, folds=5, seed=23, n.round=3, f.cri
 	## loading dag
 	dag.path <- paste0(dag.dir, dag.file,".rda");
 	g <- get(load(dag.path));
-	## compute root node 
 	root <- root.node(g);
 
 	## loading annotation matrix
 	ann.path <- paste0(ann.dir, ann.file,".rda");
 	ann <- get(load(ann.path));
-	## removing root node from annotation table if it exists
 	if(root %in% colnames(ann))
 		ann <- ann[,-which(colnames(ann)==root)];
 
@@ -169,14 +166,12 @@ Do.HTD <- function(norm=TRUE, norm.type=NULL, folds=5, seed=23, n.round=3, f.cri
 	flat.path <- paste0(flat.dir, flat.file,".rda");
 	if(norm){
 		S <- get(load(flat.path));
-		## removing root node from flat norm matrix if it exists
 		if(root %in% colnames(S))
 			S <- S[,-which(colnames(S)==root)];
 	}else{
 		S <- get(load(flat.path));
 		S <- scores.normalization(norm.type=norm.type, S);
 		cat(norm.type, "NORMALIZATION: DONE", "\n");
-		## removing root node from flat norm matrix if it exists
 		if(root %in% colnames(S))
 			S <- S[,-which(colnames(S)==root)];
 	}
@@ -186,7 +181,7 @@ Do.HTD <- function(norm=TRUE, norm.type=NULL, folds=5, seed=23, n.round=3, f.cri
 	class.check <- ncol(S)!=ncol(ann);
 	if(class.check){
 		ann <- ann[,colnames(S)];
-		nd <- colnames(S);
+		nd <- c(root, colnames(S));
 		g <- do.subgraph(nd, g, edgemode="directed");
 	}
 
@@ -196,20 +191,23 @@ Do.HTD <- function(norm=TRUE, norm.type=NULL, folds=5, seed=23, n.round=3, f.cri
 	PXR.flat <- PXR.at.multiple.recall.levels.over.classes(ann, S, rec.levels=rec.levels, folds=folds, seed=seed);
 	FMM.flat <- compute.Fmeasure.multilabel(ann, S, n.round=n.round, f.criterion=f.criterion, verbose=FALSE, 
 		b.per.example=TRUE, folds=folds, seed=seed);
+	cat("FLAT PERFORMANCE: DONE", "\n");
 
 	## Hierarchical Top Down Correction
 	S <- htd(S, g, root);
-	
+	cat("HIERARCHICAL CORRECTION: DONE", "\n");
+
 	## Compute HIER PRC, AUC, PXR (average and per class) and FMM (average and per-example) one-shoot or cross-validated 
 	PRC.hier <- AUPRC.single.over.classes(ann, S, folds=folds, seed=seed);
 	AUC.hier <- AUROC.single.over.classes(ann, S, folds=folds, seed=seed);
 	PXR.hier <- PXR.at.multiple.recall.levels.over.classes(ann, S, rec.levels=rec.levels, folds=folds, seed=seed);
 	FMM.hier <- compute.Fmeasure.multilabel(ann, S, n.round=n.round, f.criterion=f.criterion, verbose=FALSE, 
 		b.per.example=TRUE, folds=folds, seed=seed);
+	cat("HIERARCHICAL PERFORMANCE: DONE", "\n");
+	
+	## Storing Results 
 	S.hier <- S;
 	rm(S);
-
-	## Storing Results 
 	if(norm){
 		save(S.hier, file=paste0(hierScore.dir, flat.file, ".hierScores.htd.rda"), compress=TRUE);
 		save(PRC.flat, PRC.hier, AUC.flat, AUC.hier, PXR.flat, PXR.hier, FMM.flat, FMM.hier,
@@ -224,10 +222,9 @@ Do.HTD <- function(norm=TRUE, norm.type=NULL, folds=5, seed=23, n.round=3, f.cri
 #' @title HTD-DAG holdout
 #' @description High level function to correct the computed scores in a hierarchy according to the HTD-DAG algorithm applying a 
 #' classical holdout procedure
-#' @details The function check if the number of classes between the flat scores matrix and the annotations matrix mismatched
-#' (e.g. some terms might be removed from the flat scores matrix before applying an hierarchy-unaware algorithm). 
-#' If so, the number of classes of the annotations matrix is narrowed to the number of terms of the flat scores matrix and
-#' the corresponding subgraph is computed as well.
+#' @details The function checks if the number of classes between the flat scores matrix and the annotations matrix mismatched.
+#' If so, the number of terms of the annotations matrix is shrunk to the number of terms of the flat scores matrix and
+#' the corresponding subgraph is computed as well. N.B.: it is supposed that all the nodes of the subgraph are accessible from the root.
 #' @param norm boolean value: 
 #' \itemize{
 #' \item \code{TRUE} (def.): the flat scores matrix has been already normalized in according to a normalization method;	
@@ -322,14 +319,12 @@ Do.HTD.holdout <- function(norm=TRUE, norm.type=NULL, folds=5, seed=23, n.round=
 
 	## loading dag
 	dag.path <- paste0(dag.dir, dag.file,".rda");
-	g <- get(load(dag.path));
-	## compute root node 
+	g <- get(load(dag.path)); 
 	root <- root.node(g);
 
 	## loading annotation matrix
 	ann.path <- paste0(ann.dir, ann.file,".rda");
 	ann <- get(load(ann.path));
-	## removing root node from annotation table if it exists
 	if(root %in% colnames(ann))
 		ann <- ann[,-which(colnames(ann)==root)];
 
@@ -337,7 +332,6 @@ Do.HTD.holdout <- function(norm=TRUE, norm.type=NULL, folds=5, seed=23, n.round=
 	flat.path <- paste0(flat.dir, flat.file,".rda");
 	if(norm){
 		S <- get(load(flat.path));
-		## removing root node from flat norm matrix if it exists
 		if(root %in% colnames(S))
 			S <- S[,-which(colnames(S)==root)];
 	}else{
@@ -350,18 +344,16 @@ Do.HTD.holdout <- function(norm=TRUE, norm.type=NULL, folds=5, seed=23, n.round=
 	}
 
 	## check if |flat matrix classes| = |annotation matrix classes| 
-	## if not the classes of annotation matrix are shrinked to those of flat matrix
+	## if not the classes of annotation matrix are shrunk to those of flat matrix
 	class.check <- ncol(S)!=ncol(ann);
 	if(class.check){
 		ann <- ann[,colnames(S)];
-		nd <- colnames(S);
+		nd <- c(root, colnames(S));
 		g <- do.subgraph(nd, g, edgemode="directed");
 	}
 
-	## scores flat matrix shrinked to test test
+	## shrunk scores flat matrix and annotations tables to test test
 	S <- S[ind.test,];
-	
-	## annotation table  shrinked to test test 
 	ann <- ann[ind.test,];
 
 	## Compute FLAT PRC, AUC, PXR (average and per class) and FMM (average and per-example) one-shoot or cross-validated 
@@ -370,20 +362,23 @@ Do.HTD.holdout <- function(norm=TRUE, norm.type=NULL, folds=5, seed=23, n.round=
 	PXR.flat <- PXR.at.multiple.recall.levels.over.classes(ann, S, rec.levels=rec.levels, folds=folds, seed=seed);
 	FMM.flat <- compute.Fmeasure.multilabel(ann, S, n.round=n.round, f.criterion=f.criterion, verbose=FALSE,
 		b.per.example=TRUE, folds=folds, seed=seed);
+	cat("FLAT PERFORMANCE: DONE", "\n");
 
 	## Hierarchical Top Down Correction 
 	S <- htd(S,g,root);
-	
+	cat("HIERARCHICAL CORRECTION: DONE", "\n");
+
 	## Compute HIER PRC, AUC, PXR (average and per class) and FMM (average and per-example) one-shoot or cross-validated 
 	PRC.hier <- AUPRC.single.over.classes(ann, S, folds=folds, seed=seed);
 	AUC.hier <- AUROC.single.over.classes(ann, S, folds=folds, seed=seed);
 	PXR.hier <- PXR.at.multiple.recall.levels.over.classes(ann, S, rec.levels=rec.levels, folds=folds, seed=seed);
 	FMM.hier <- compute.Fmeasure.multilabel(ann, S, n.round=n.round, f.criterion=f.criterion, verbose=FALSE, 
 		b.per.example=TRUE, folds=folds, seed=seed);
+	cat("HIERARCHICAL PERFORMANCE: DONE", "\n");
+
+	## Storing Results 
 	S.hier <- S;
 	rm(S);
-	
-	## Storing Results 
 	if(norm){
 		save(S.hier, file=paste0(hierScore.dir, flat.file, ".hierScores.htd.holdout.rda"), compress=TRUE);
 		save(PRC.flat, PRC.hier, AUC.flat, AUC.hier, PXR.flat, PXR.hier, FMM.flat, FMM.hier,

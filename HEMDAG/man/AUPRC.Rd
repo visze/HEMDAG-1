@@ -38,11 +38,16 @@ If \code{seed}\eqn{\neq}\code{NULL} and \code{folds=NULL}, the AUPRC averaged ac
 Function to compute Area under the Precision Recall Curve (AUPRC) through \pkg{precrec} package
 }
 \details{
-The AUPRC (for a single class or for a set of classes) is computed either one-shot or averaged across stratified folds.\cr
-\code{AUPRC.single.class} computes the AUPRC just for a given class.\cr
-\code{AUPR.single.over.classes} computes the AUPRC for a set of classes, including their average values across all the classes.\cr
+The AUPRC (for a single class or for a set of classes) is computed either one-shot or averaged across stratified folds.
+
+\code{AUPRC.single.class} computes the AUPRC just for a given class.
+
+\code{AUPR.single.over.classes} computes the AUPRC for a set of classes, including their average values across all the classes.
+
 For all those classes having zero annotations, the AUPRC is set to 0. These classes are discarded in the computing of the AUPRC   
 averaged across classes, both when the AUPRC is computed one-shot or averaged across stratified folds.
+
+Names of rows and columns of \code{labels} and \code{predicted} matrix must be provided in the same order, otherwise a stop message is returned
 }
 \examples{
 data(labels);

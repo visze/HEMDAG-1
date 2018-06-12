@@ -120,11 +120,11 @@ High level function to correct the computed scores in a hierarchy according to t
 }
 \details{
 The parametric hierarchical ensemble variants are cross-validated by maximizing in according to the metric
-chosen in the parameter \code{metric}, that is F-measure (\code{\link{Multilabel.F.measure}}) or AUPRC (\code{\link{AUPRC}}).\cr
-The function check if the number of classes between the flat scores matrix and the annotations matrix mismatched, 
-since some terms might have been removed from the flat scores matrix before applying an hierarchy-unaware algorithm. 
-If so, the number of classes of the annotations matrix is narrowed to the number of terms of the flat scores matrix and 
-the corresponding subgraph is computed as well.
+chosen in the parameter \code{metric}, that is F-measure (\code{\link{Multilabel.F.measure}}) or AUPRC (\code{\link{AUPRC}}).
+
+The function checks if the number of classes between the flat scores matrix and the annotations matrix mismatched.
+If so, the number of terms of the annotations matrix is shrunk to the number of terms of the flat scores matrix and
+the corresponding subgraph is computed as well. N.B.: it is supposed that all the nodes of the subgraph are accessible from the root.
 }
 \examples{
 data(graph);

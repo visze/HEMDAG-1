@@ -91,10 +91,9 @@ High level function to compute the hierarchical heuristic methods MAX, AND, OR (
 Genome Biology, 2008}) applying a classical holdout procedure
 }
 \details{
-The function check if the number of classes between the flat scores matrix and the annotations matrix mismatched
-(e.g. some terms might be removed from the flat scores matrix before applying an hierarchy-unaware algorithm). 
-If so, the number of classes of the annotations matrix is narrowed to the number of terms of the flat scores matrix and
-the corresponding subgraph is computed as well.
+The function checks if the number of classes between the flat scores matrix and the annotations matrix mismatched.
+If so, the number of terms of the annotations matrix is shrunk to the number of terms of the flat scores matrix and
+the corresponding subgraph is computed as well. N.B.: it is supposed that all the nodes of the subgraph are accessible from the root.
 }
 \examples{
 data(graph);

@@ -179,11 +179,10 @@ TPR.DAG <- function(S, g, root="00", positive="children", bottomup="threshold.fr
 #' @seealso \code{\link{TPR-DAG-variants}}
 #' @description High level function to correct the computed scores in a hierarchy according to the chosen ensemble algorithm 
 #' @details The parametric hierarchical ensemble variants are cross-validated by maximizing in according to the metric
-#' chosen in the parameter \code{metric}, that is F-measure (\code{\link{Multilabel.F.measure}}) or AUPRC (\code{\link{AUPRC}}).\cr
-#' The function check if the number of classes between the flat scores matrix and the annotations matrix mismatched, 
-#' since some terms might have been removed from the flat scores matrix before applying an hierarchy-unaware algorithm. 
-#' If so, the number of classes of the annotations matrix is narrowed to the number of terms of the flat scores matrix and 
-#' the corresponding subgraph is computed as well.
+#' chosen in the parameter \code{metric}, that is F-measure (\code{\link{Multilabel.F.measure}}) or AUPRC (\code{\link{AUPRC}}).
+#' @details The function checks if the number of classes between the flat scores matrix and the annotations matrix mismatched.
+#' If so, the number of terms of the annotations matrix is shrunk to the number of terms of the flat scores matrix and
+#' the corresponding subgraph is computed as well. N.B.: it is supposed that all the nodes of the subgraph are accessible from the root.
 #' @param threshold range of threshold values to be tested in order to find the best threshold (\code{def:} \code{from:0.1}, 
 #' \code{to:0.9}, \code{by:0.1}).
 #' The denser the range is, the higher the probability to find the best threshold is, but obviously the execution time will be higher.
@@ -335,13 +334,11 @@ Do.TPR.DAG <- function(threshold=seq(from=0.1, to=0.9, by=0.1), weight=seq(from=
 	## loading dag
 	dag.path <- paste0(dag.dir, dag.file,".rda");
 	g <- get(load(dag.path));
-	## compute root node 
 	root <- root.node(g);
 
 	## loading annotation matrix
 	ann.path <- paste0(ann.dir, ann.file,".rda");
 	ann <- get(load(ann.path));
-	## removing root node from annotation table if it exists
 	if(root %in% colnames(ann))
 		ann <- ann[,-which(colnames(ann)==root)];
 
@@ -349,14 +346,12 @@ Do.TPR.DAG <- function(threshold=seq(from=0.1, to=0.9, by=0.1), weight=seq(from=
 	flat.path <- paste0(flat.dir, flat.file,".rda");
 	if(norm){
 		S <- get(load(flat.path));
-		## removing root node from flat norm matrix if it exists
 		if(root %in% colnames(S))
 			S <- S[,-which(colnames(S)==root)];
 	}else{
 		S <- get(load(flat.path));
 		S <- scores.normalization(norm.type=norm.type, S);
 		cat(norm.type, "NORMALIZATION: DONE", "\n");
-		## removing root node from flat norm matrix if it exists
 		if(root %in% colnames(S))
 			S <- S[,-which(colnames(S)==root)];
 	}
@@ -366,7 +361,7 @@ Do.TPR.DAG <- function(threshold=seq(from=0.1, to=0.9, by=0.1), weight=seq(from=
 	class.check <- ncol(S)!=ncol(ann);
 	if(class.check){
 		ann <- ann[,colnames(S)];
-		nd <- colnames(S);
+		nd <- c(root, colnames(S));
 		g <- do.subgraph(nd, g, edgemode="directed");
 	}
 
@@ -376,16 +371,19 @@ Do.TPR.DAG <- function(threshold=seq(from=0.1, to=0.9, by=0.1), weight=seq(from=
 	PXR.flat <- PXR.at.multiple.recall.levels.over.classes(ann, S, rec.levels=rec.levels, folds=folds, seed=seed);
 	FMM.flat <- compute.Fmeasure.multilabel(ann, S, n.round=n.round, f.criterion=f.criterion, verbose=FALSE, 
 		b.per.example=TRUE, folds=folds, seed=seed);
+	cat("FLAT PERFORMANCE: DONE", "\n");
 
 	## Hierarchical Correction 
 	if(bottomup=="threshold.free"){
 		S <- TPR.DAG(S, g, root=root, positive=positive, bottomup=bottomup, t=0, w=0);
+		cat("HIERARCHICAL CORRECTION: DONE", "\n");
 		## Compute HIER PRC, AUC, PXR (average and per class) and FMM (average and per-example) one-shoot or cross-validated
 		PRC.hier <- AUPRC.single.over.classes(ann, S, folds=folds, seed=seed);
 		AUC.hier <- AUROC.single.over.classes(ann, S, folds=folds, seed=seed);
 		PXR.hier <- PXR.at.multiple.recall.levels.over.classes(ann, S, rec.levels=rec.levels, folds=folds, seed=seed);
 		FMM.hier <- compute.Fmeasure.multilabel(ann, S, n.round=n.round, f.criterion=f.criterion, verbose=FALSE, 
 			b.per.example=TRUE, folds=folds, seed=seed);
+		cat("HIERARCHICAL PERFORMANCE: DONE", "\n");
 		S.hier <- S;
 		rm(S);
 	}else{
@@ -433,7 +431,8 @@ Do.TPR.DAG <- function(threshold=seq(from=0.1, to=0.9, by=0.1), weight=seq(from=
 			## test set 
 			pred.test <- TPR.DAG(test, g, root=root, positive=positive, bottomup=bottomup, t=bestT, w=bestW);
 			## assembling the hierarchical scores of each k sub-matrix
-			S.hier <- rbind(S.hier, pred.test); 
+			S.hier <- rbind(S.hier, pred.test);
+			cat("HIERARCHICAL CORRECTION: DONE", "\n");
 		}
 		## put the rows (i.e. genes) of assembled k sub-matrix in the same order of the beginning matrix
 		S.hier <- S.hier[rownames(S),];
@@ -443,6 +442,7 @@ Do.TPR.DAG <- function(threshold=seq(from=0.1, to=0.9, by=0.1), weight=seq(from=
 		PXR.hier <- PXR.at.multiple.recall.levels.over.classes(ann, S.hier, rec.levels=rec.levels, folds=folds, seed=seed);
 		FMM.hier <- compute.Fmeasure.multilabel(ann, S.hier, n.round=n.round, f.criterion=f.criterion, verbose=FALSE, 
 			b.per.example=TRUE, folds=folds, seed=seed);
+		cat("HIERARCHICAL PERFORMANCE: DONE", "\n");
 		## remove no longer useful variables..
 		rm(S, testIndex, pred.test, test, training, target.test, target.training); gc();
 	}
@@ -483,11 +483,10 @@ Do.TPR.DAG <- function(threshold=seq(from=0.1, to=0.9, by=0.1), weight=seq(from=
 #' @seealso \code{\link{TPR-DAG-variants}}
 #' @description High level function to correct the computed scores in a hierarchy according to the chosen ensemble algorithm 
 #' @details The parametric hierarchical ensemble variants are cross-validated by maximizing in according to the metric
-#' chosen in the parameter \code{metric}, that is F-measure (\code{\link{Multilabel.F.measure}}) or AUPRC (\code{\link{AUPRC}}).\cr
-#' The function check if the number of classes between the flat scores matrix and the annotations matrix mismatched, 
-#' since some terms might have been removed from the flat scores matrix before applying an hierarchy-unaware algorithm. 
-#' If so, the number of classes of the annotations matrix is narrowed to the number of terms of the flat scores matrix and 
-#' the corresponding subgraph is computed as well.
+#' chosen in the parameter \code{metric}, that is F-measure (\code{\link{Multilabel.F.measure}}) or AUPRC (\code{\link{AUPRC}}).
+#' @details The function checks if the number of classes between the flat scores matrix and the annotations matrix mismatched.
+#' If so, the number of terms of the annotations matrix is shrunk to the number of terms of the flat scores matrix and
+#' the corresponding subgraph is computed as well. N.B.: it is supposed that all the nodes of the subgraph are accessible from the root.
 #' @param threshold range of threshold values to be tested in order to find the best threshold (def: \code{from:0.1}, \code{to:0.9}, \code{by:0.1}).
 #' The denser the range is, the higher the probability to find the best threshold is, but obviously the execution time will be higher.
 #' Set the parameter \code{threshold} only for the variants that requiring a threshold for the positive nodes selection, 
@@ -647,13 +646,11 @@ Do.TPR.DAG.holdout <- function(threshold=seq(from=0.1, to=0.9, by=0.1), weight=s
 	## loading dag
 	dag.path <- paste0(dag.dir, dag.file,".rda");
 	g <- get(load(dag.path));
-	## compute root node 
 	root <- root.node(g);
 
 	## loading annotation matrix
 	ann.path <- paste0(ann.dir, ann.file,".rda");
 	ann <- get(load(ann.path));
-	## removing root node from annotation table if it exists
 	if(root %in% colnames(ann))
 		ann <- ann[,-which(colnames(ann)==root)];
 
@@ -661,14 +658,12 @@ Do.TPR.DAG.holdout <- function(threshold=seq(from=0.1, to=0.9, by=0.1), weight=s
 	flat.path <- paste0(flat.dir, flat.file,".rda");
 	if(norm){
 		S <- get(load(flat.path));
-		## removing root node from flat norm matrix if it exists
 		if(root %in% colnames(S))
 			S <- S[,-which(colnames(S)==root)];
 	}else{
 		S <- get(load(flat.path));
 		S <- scores.normalization(norm.type=norm.type, S);
 		cat(norm.type, "NORMALIZATION: DONE", "\n");
-		## removing root node from flat norm matrix if it exists
 		if(root %in% colnames(S))
 			S <- S[,-which(colnames(S)==root)];
 	}
@@ -678,7 +673,7 @@ Do.TPR.DAG.holdout <- function(threshold=seq(from=0.1, to=0.9, by=0.1), weight=s
 	class.check <- ncol(S)!=ncol(ann);
 	if(class.check){
 		ann <- ann[,colnames(S)];
-		nd <- colnames(S);
+		nd <- c(root, colnames(S));
 		g <- do.subgraph(nd, g, edgemode="directed");
 	}
 
@@ -696,16 +691,19 @@ Do.TPR.DAG.holdout <- function(threshold=seq(from=0.1, to=0.9, by=0.1), weight=s
 	PXR.flat <- PXR.at.multiple.recall.levels.over.classes(ann.test, S.test, rec.levels=rec.levels, folds=folds, seed=seed);
 	FMM.flat <- compute.Fmeasure.multilabel(ann.test, S.test, n.round=n.round, f.criterion=f.criterion, verbose=FALSE,
 		b.per.example=TRUE, folds=folds, seed=seed);
+	cat("FLAT PERFORMANCE: DONE", "\n");
 
 	## Hierarchical Correction 
 	if(bottomup=="threshold.free"){
 		S.test <- TPR.DAG(S.test, g, root=root, positive=positive, bottomup=bottomup, t=0, w=0);
+		cat("HIERARCHICAL CORRECTION: DONE", "\n");
 		## Compute HIER PRC, AUC, PXR (average and per class) and FMM (average and per-example) one-shoot or cross-validated 
 		PRC.hier <- AUPRC.single.over.classes(ann.test, S.test, folds=folds, seed=seed);
 		AUC.hier <- AUROC.single.over.classes(ann.test, S.test, folds=folds, seed=seed);
 		PXR.hier <- PXR.at.multiple.recall.levels.over.classes(ann.test, S.test, rec.levels=rec.levels, folds=folds, seed=seed);
 		FMM.hier <- compute.Fmeasure.multilabel(ann.test, S.test, n.round=n.round, f.criterion=f.criterion, verbose=FALSE, 
 			b.per.example=TRUE, folds=folds, seed=seed);
+		cat("HIERARCHICAL PERFORMANCE: DONE", "\n");
 		S.hier <- S.test;
 		rm(S, S.test);
 	}else{
@@ -748,6 +746,7 @@ Do.TPR.DAG.holdout <- function(threshold=seq(from=0.1, to=0.9, by=0.1), weight=s
 			}
 		}
 		S.test <- TPR.DAG(S.test, g, root=root, positive=positive, bottomup=bottomup, t=bestT, w=bestW);
+		cat("HIERARCHICAL CORRECTION: DONE", "\n");
 
 		## Compute HIER PRC, AUC, PXR (average and per class) and FMM (average and per-example) one-shoot or cross-validated 
 		PRC.hier <- AUPRC.single.over.classes(ann.test, S.test, folds=folds, seed=seed);
@@ -755,7 +754,8 @@ Do.TPR.DAG.holdout <- function(threshold=seq(from=0.1, to=0.9, by=0.1), weight=s
 		PXR.hier <- PXR.at.multiple.recall.levels.over.classes(ann.test, S.test, rec.levels=rec.levels, folds=folds, seed=seed);
 		FMM.hier <- compute.Fmeasure.multilabel(ann.test, S.test, n.round=n.round, f.criterion=f.criterion, verbose=FALSE, 
 			b.per.example=TRUE, folds=folds, seed=seed);
-
+		cat("HIERARCHICAL PERFORMANCE: DONE", "\n");
+		
 		## storing the hierarchical matrix
 		S.hier <- S.test;
 		rm(S, S.test, S.training, training);

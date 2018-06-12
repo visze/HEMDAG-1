@@ -114,10 +114,9 @@ heuristicOR <- function(S, g, root="00"){
 #' @seealso \code{\link{Heuristic-Methods}}
 #' @description High level function to compute the hierarchical heuristic methods MAX, AND, OR (Heuristic Methods MAX, AND, OR (\cite{Obozinski et al., 
 #' Genome Biology, 2008})
-#' @details The function check if the number of classes between the flat scores matrix and the annotations matrix mismatched
-#' (e.g. some terms might be removed from the flat scores matrix before applying an hierarchy-unaware algorithm). 
-#' If so, the number of classes of the annotations matrix is narrowed to the number of terms of the flat scores matrix and 
-#' the corresponding subgraph is computed as well.
+#' @details The function checks if the number of classes between the flat scores matrix and the annotations matrix mismatched.
+#' If so, the number of terms of the annotations matrix is shrunk to the number of terms of the flat scores matrix and
+#' the corresponding subgraph is computed as well. N.B.: it is supposed that all the nodes of the subgraph are accessible from the root.
 #' @param heuristic.fun can be one of the following three values:
 #' \enumerate{
 #' 	\item "MAX": run the heuristic method MAX;
@@ -208,13 +207,11 @@ Do.heuristic.methods <- function(heuristic.fun="AND", norm=TRUE, norm.type=NULL,
 	## loading dag
 	dag.path <- paste0(dag.dir, dag.file,".rda");
 	g <- get(load(dag.path));
-	## compute root node 
 	root <- root.node(g);
 
 	## loading annotation matrix
 	ann.path <- paste0(ann.dir, ann.file,".rda");
 	ann <- get(load(ann.path));
-	## removing root node from annotation table if it exists
 	if(root %in% colnames(ann))
 		ann <- ann[,-which(colnames(ann)==root)];
 
@@ -222,24 +219,22 @@ Do.heuristic.methods <- function(heuristic.fun="AND", norm=TRUE, norm.type=NULL,
 	flat.path <- paste0(flat.dir, flat.file,".rda");
 	if(norm){
 		S <- get(load(flat.path));
-		## removing root node from flat norm matrix if it exists
 		if(root %in% colnames(S))
 			S <- S[,-which(colnames(S)==root)];
 	}else{
 		S <- get(load(flat.path));
 		S <- scores.normalization(norm.type=norm.type, S);
 		cat(norm.type, "NORMALIZATION: DONE", "\n");
-		## removing root node from flat norm matrix if it exists
 		if(root %in% colnames(S))
 			S <- S[,-which(colnames(S)==root)];
 	}
 
 	## check if |flat matrix classes| = |annotation matrix classes| 
-	## if not the classes of annotation matrix are shrinked to those of flat matrix
+	## if not the classes of annotation matrix are shrunk to those of flat matrix
 	class.check <- ncol(S)!=ncol(ann);
 	if(class.check){
 		ann <- ann[,colnames(S)];
-		nd <- colnames(S);
+		nd <- c(root, colnames(S));
 		g <- do.subgraph(nd, g, edgemode="directed");
 	}
 
@@ -249,6 +244,7 @@ Do.heuristic.methods <- function(heuristic.fun="AND", norm=TRUE, norm.type=NULL,
 	PXR.flat <- PXR.at.multiple.recall.levels.over.classes(ann, S, rec.levels=rec.levels, folds=folds, seed=seed);
 	FMM.flat <- compute.Fmeasure.multilabel(ann, S, n.round=n.round, f.criterion=f.criterion, verbose=FALSE, 
 		b.per.example=TRUE, folds=folds, seed=seed);
+	cat("FLAT PERFORMANCE: DONE", "\n");
 
 	## Obozinski's Hierarchical Heuristic Methods 
 	if(heuristic.fun=="AND")
@@ -257,13 +253,15 @@ Do.heuristic.methods <- function(heuristic.fun="AND", norm=TRUE, norm.type=NULL,
 		S <- heuristicMAX(S, g, root);
 	if(heuristic.fun=="OR")
 		S <- heuristicOR(S, g, root);
-	
+	cat("HIERARCHICAL CORRECTION: DONE", "\n");
+
 	## Compute HIER PRC, AUC, PXR (average and per class) FMM (average and per-example) one-shoot or cross-validated 
 	PRC.hier <- AUPRC.single.over.classes(ann, S, folds=folds, seed=seed);
 	AUC.hier <- AUROC.single.over.classes(ann, S, folds=folds, seed=seed);
 	PXR.hier <- PXR.at.multiple.recall.levels.over.classes(ann, S, rec.levels=rec.levels, folds=folds, seed=seed);
 	FMM.hier <- compute.Fmeasure.multilabel(ann, S, n.round=n.round, f.criterion=f.criterion, verbose=FALSE, 
 		b.per.example=TRUE, folds=folds, seed=seed);
+	cat("HIERARCHICAL PERFORMANCE: DONE", "\n");
 
 	## storing the hierarchical matrix
 	S.hier <- S;
@@ -291,10 +289,9 @@ Do.heuristic.methods <- function(heuristic.fun="AND", norm=TRUE, norm.type=NULL,
 #' @title Do Heuristic Methods holdout
 #' @description High level function to compute the hierarchical heuristic methods MAX, AND, OR (Heuristic Methods MAX, AND, OR (\cite{Obozinski et al., 
 #' Genome Biology, 2008}) applying a classical holdout procedure
-#' @details The function check if the number of classes between the flat scores matrix and the annotations matrix mismatched
-#' (e.g. some terms might be removed from the flat scores matrix before applying an hierarchy-unaware algorithm). 
-#' If so, the number of classes of the annotations matrix is narrowed to the number of terms of the flat scores matrix and
-#' the corresponding subgraph is computed as well.
+#' @details The function checks if the number of classes between the flat scores matrix and the annotations matrix mismatched.
+#' If so, the number of terms of the annotations matrix is shrunk to the number of terms of the flat scores matrix and
+#' the corresponding subgraph is computed as well. N.B.: it is supposed that all the nodes of the subgraph are accessible from the root.
 #' @param heuristic.fun can be one of the following three values:
 #' \enumerate{
 #' 	\item "MAX": run the heuristic method MAX;
@@ -398,45 +395,39 @@ Do.heuristic.methods.holdout <- function(heuristic.fun="AND", norm=TRUE, norm.ty
 	## loading dag
 	dag.path <- paste0(dag.dir, dag.file,".rda");
 	g <- get(load(dag.path));
-	## compute root node 
 	root <- root.node(g);
 
 	## loading annotation matrix
 	ann.path <- paste0(ann.dir, ann.file,".rda");
 	ann <- get(load(ann.path));
-	## removing root node from annotation table if it exists
 	if(root %in% colnames(ann))
 		ann <- ann[,-which(colnames(ann)==root)];
 
 	## loading flat matrix
 	flat.path <- paste0(flat.dir, flat.file,".rda");
 	if(norm){
-		S <- get(load(flat.path));
-		## removing root node from flat norm matrix if it exists
+		S <- get(load(flat.path));		
 		if(root %in% colnames(S))
 			S <- S[,-which(colnames(S)==root)];
 	}else{
 		S <- get(load(flat.path));
 		S <- scores.normalization(norm.type=norm.type, S);
 		cat(norm.type, "NORMALIZATION: DONE", "\n");
-		## removing root node from flat norm matrix if it exists
 		if(root %in% colnames(S))
 			S <- S[,-which(colnames(S)==root)];
 	}
 
 	## check if |flat matrix classes| = |annotation matrix classes| 
-	## if not the classes of annotation matrix are shrinked to those of flat matrix
+	## if not the classes of annotation matrix are shrunk to those of flat matrix
 	class.check <- ncol(S)!=ncol(ann);
 	if(class.check){
 		ann <- ann[,colnames(S)];
-		nd <- colnames(S);
+		nd <- c(root, colnames(S));
 		g <- do.subgraph(nd, g, edgemode="directed");
 	}
 
-	## scores flat matrix shrinked to test test
+	## shrinking scores flat matrix and annotation table to test test
 	S <- S[ind.test,];
-	
-	## annotation table  shrinked to test test 
 	ann <- ann[ind.test,];
 
 	## Compute FLAT PRC, AUC, PXR (average and per class) FMM (average and per-example) one-shoot or cross-validated 
@@ -445,6 +436,7 @@ Do.heuristic.methods.holdout <- function(heuristic.fun="AND", norm=TRUE, norm.ty
 	PXR.flat <- PXR.at.multiple.recall.levels.over.classes(ann, S, rec.levels=rec.levels, folds=folds, seed=seed);
 	FMM.flat <- compute.Fmeasure.multilabel(ann, S, n.round=n.round, f.criterion=f.criterion, verbose=FALSE,
 		b.per.example=TRUE, folds=folds, seed=seed);
+	cat("FLAT PERFORMANCE: DONE", "\n");
 
 	## Obozinski's Hierarchical Heuristic Methods 
 	if(heuristic.fun=="AND")
@@ -453,17 +445,19 @@ Do.heuristic.methods.holdout <- function(heuristic.fun="AND", norm=TRUE, norm.ty
 		S <- heuristicMAX(S, g, root);
 	if(heuristic.fun=="OR")
 		S <- heuristicOR(S, g, root);
-	
+	cat("HIERARCHICAL CORRECTION: DONE", "\n");
+
 	## Compute HIER PRC, AUC, PXR (average and per class) FMM (average and per-example) one-shoot or cross-validated 
 	PRC.hier <- AUPRC.single.over.classes(ann, S, folds=folds, seed=seed);
 	AUC.hier <- AUROC.single.over.classes(ann, S, folds=folds, seed=seed);
 	PXR.hier <- PXR.at.multiple.recall.levels.over.classes(ann, S, rec.levels=rec.levels, folds=folds, seed=seed);
 	FMM.hier <- compute.Fmeasure.multilabel(ann, S, n.round=n.round, f.criterion=f.criterion, verbose=FALSE, 
 		b.per.example=TRUE, folds=folds, seed=seed);
-	S.hier <- S;
-	rm(S);
+	cat("HIERARCHICAL PERFORMANCE: DONE", "\n");
 	
 	## Storing Results 
+	S.hier <- S;
+	rm(S);
 	if(heuristic.fun=="AND")
 		heuristic.name <- "AND";
 	if(heuristic.fun=="MAX")

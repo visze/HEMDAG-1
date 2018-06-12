@@ -33,9 +33,11 @@ a list with two elements:
 Function to compute the Precision at fixed Recall levels (PXR) over classes through \pkg{PerfMeas} package
 }
 \details{
-The PXR across all classes is computed either one-shot or averaged across stratified folds
+The PXR across all classes is computed either one-shot or averaged across stratified folds.
 
 Function to compute the precision at fixed recall levels across all classes either one-shot or averaged across stratified folds
+
+Names of rows and columns of \code{target} and \code{pred} matrix must be provided in the same order, otherwise a stop message is returned
 }
 \examples{
 data(labels);

@@ -54,6 +54,8 @@ All the examples having no positive annotations are discarded. The predicted sco
 according to parameter \code{n.round} and all the values of \code{pred} are divided by \code{max(pred)}.
 Then all the thresholds corresponding to all the different values included in \code{pred} are attempted, and the threshold 
 leading to the maximum F-measure is selected.
+
+Names of rows and columns of \code{target} and \code{pred} matrix must be provided in the same order, otherwise a stop message is returned
 }
 \examples{
 data(graph);

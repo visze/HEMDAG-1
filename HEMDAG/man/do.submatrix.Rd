@@ -4,10 +4,10 @@
 \alias{do.submatrix}
 \title{Build submatrix}
 \usage{
-do.submatrix(hpo.ann, n)
+do.submatrix(ann, n)
 }
 \arguments{
-\item{hpo.ann}{the annotations matrix (0/1). Rows are examples and columns are classes}
+\item{ann}{the annotations matrix (0/1). Rows are examples and columns are classes}
 
 \item{n}{integer number of annotations to be pruned}
 }

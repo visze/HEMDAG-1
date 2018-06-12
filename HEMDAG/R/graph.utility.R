@@ -741,16 +741,16 @@ Do.full.annotation.matrix <- function(anc.file.name=anc.file.name, anc.dir=anc.d
 #' @title Build submatrix
 #' @title Build an annotation matrix with only those terms having more than n annotations.
 #' @description Terms having less than n annotations are pruned. Terms having exactly n annotations are discarded as well.
-#' @param hpo.ann the annotations matrix (0/1). Rows are examples and columns are classes 
+#' @param ann the annotations matrix (0/1). Rows are examples and columns are classes 
 #' @param n integer number of annotations to be pruned
 #' @return Matrix of annotations having only those terms with more than n annotations
 #' @export
 #' @examples
 #' data(labels);
 #' subm <- do.submatrix(L,5);
-do.submatrix <- function(hpo.ann,n){
-	hpo.ann.sel <- hpo.ann[,colSums(hpo.ann)>n];
-	return(hpo.ann.sel);
+do.submatrix <- function(ann,n){
+	ann.sel <- ann[,colSums(ann)>n];
+	return(ann.sel);
 }
 
 #' @title Build subgraph 
@@ -788,7 +788,7 @@ do.subgraph <- function(nd, g, edgemode="directed"){
 #' @description This function assess the integrity of an annotation table in which a transitive closure of annotations was performed
 #' @param anc list of the ancestors of the ontology. 
 #' @param ann.spec the annotation matrix of the most specific annotations (0/1): rows are genes and columns are terms. 
-#' @param hpo.ann the full annotations matrix (0/1), that is the matrix in which the transitive closure of the annotation was performed.
+#' @param ann the full annotations matrix (0/1), that is the matrix in which the transitive closure of the annotation was performed.
 #' Rows are examples and columns are classes. 
 #' @return If the transitive closure of the annotations is well performed "OK" is returned, otherwise a message error is printed on the stdout
 #' @seealso \code{\link{build.ancestors}}, \code{\link{transitive.closure.annotations}}, \code{\link{full.annotation.matrix}}
@@ -799,13 +799,13 @@ do.subgraph <- function(nd, g, edgemode="directed"){
 #' anc <- build.ancestors(g);
 #' tca <- transitive.closure.annotations(L, anc);
 #' check.annotation.matrix.integrity(anc, L, tca);
-check.annotation.matrix.integrity <- function(anc, ann.spec, hpo.ann){
+check.annotation.matrix.integrity <- function(anc, ann.spec, ann){
 	## construction of annotation list
 	ann.list <- specific.annotation.list(ann.spec);
-	genes <- rownames(hpo.ann);
+	genes <- rownames(ann);
 	check <- c();
 	for (i in genes){
-		spec.ann <- which(hpo.ann[i,]==1);
+		spec.ann <- which(ann[i,]==1);
 		len.ann <- length(spec.ann);
 		all.anc <- lapply(ann.list[[i]], function(x) return(anc[[x]]));
 		all.anc <- unique(unlist(all.anc));
@@ -831,7 +831,7 @@ check.annotation.matrix.integrity <- function(anc, ann.spec, hpo.ann){
 #' @description This function assess the integrity of a DAG
 #' @param g a graph of class \code{graphNEL}. It represents the hierarchy of the classes
 #' @param root name of the class that is on the top-level of the hierarchy (def:"00")
-#' @return If there are nodes not accessible from the root "OK" is printed, 
+#' @return If all the nodes are accessible from the root "DAG is OK" is printed, 
 #' otherwise a message error and the list of the not accessible nodes is printed on the stdout
 #' @export
 #' @examples
@@ -851,7 +851,7 @@ check.DAG.integrity <- function(g, root="00"){
 		cat("Nodes not accessible from root: \n");
 		cat(n,"\n");
 	}else{ 
-		cat("OK \n")
+		cat("DAG is OK \n")
 	};
 }
 

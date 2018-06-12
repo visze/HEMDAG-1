@@ -4,14 +4,14 @@
 \alias{check.annotation.matrix.integrity}
 \title{Annotation matrix checker}
 \usage{
-check.annotation.matrix.integrity(anc, ann.spec, hpo.ann)
+check.annotation.matrix.integrity(anc, ann.spec, ann)
 }
 \arguments{
 \item{anc}{list of the ancestors of the ontology.}
 
 \item{ann.spec}{the annotation matrix of the most specific annotations (0/1): rows are genes and columns are terms.}
 
-\item{hpo.ann}{the full annotations matrix (0/1), that is the matrix in which the transitive closure of the annotation was performed.
+\item{ann}{the full annotations matrix (0/1), that is the matrix in which the transitive closure of the annotation was performed.
 Rows are examples and columns are classes.}
 }
 \value{

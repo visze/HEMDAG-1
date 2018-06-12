@@ -56,6 +56,9 @@ examples and T is the best selected threshold;
 \description{
 Function to compute the best hierarchical F-score either one-shot or averaged across folds
 }
+\details{
+Names of rows and columns of \code{target} and \code{pred} matrix must be provided in the same order, otherwise a stop message is returned
+}
 \examples{
 data(graph);
 data(labels);

@@ -12,7 +12,7 @@ check.DAG.integrity(g, root = "00")
 \item{root}{name of the class that is on the top-level of the hierarchy (def:"00")}
 }
 \value{
-If there are nodes not accessible from the root "OK" is printed, 
+If all the nodes are accessible from the root "DAG is OK" is printed, 
 otherwise a message error and the list of the not accessible nodes is printed on the stdout
 }
 \description{
