@@ -1,0 +1,16 @@
+HEMDAG 1.1.1
+---------------------------------------------------------------------
+
+NEW FEATURES
+* Added DESCENS algorithm
+* Added Heuristic Methods MAX, AND, OR (Obozinski et al., Genome Biology, 2008)
+* Added tupla.matrix function
+
+CHANGES
+* Improved Manual
+* Added link to the GitHub repository HPOparser
+* Added CITATION file
+
+HEMDAG 1.0.0
+---------------------------------------------------------------------
+PACKAGE GENESIS
