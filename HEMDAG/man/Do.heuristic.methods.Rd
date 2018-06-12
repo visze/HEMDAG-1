@@ -4,7 +4,7 @@
 \alias{Do.heuristic.methods}
 \title{Do Heuristic Methods}
 \usage{
-Do.heuristic.methods(heuristic.fun = heuristic.fun, norm = TRUE,
+Do.heuristic.methods(heuristic.fun = "AND", norm = TRUE,
   norm.type = "NONE", flat.file = flat.file, ann.file = ann.file,
   dag.file = dag.file, flat.dir = flat.dir, ann.dir = ann.dir,
   dag.dir = dag.dir, flat.norm.dir = NULL, n.round = 3,
@@ -13,9 +13,9 @@ Do.heuristic.methods(heuristic.fun = heuristic.fun, norm = TRUE,
 \arguments{
 \item{heuristic.fun}{can be one of the following three values:
 \enumerate{
-    \item heuristicMAX: run the MAX heuristic method;
-    \item heuristicAND: run theAND heuristic method;
-    \item heuristicOR: run theOR heuristic method;
+    \item "MAX": run the heuristic method MAX;
+    \item "AND": run the heuristic method AND;
+    \item "OR": run the heuristic method OR;
 }}
 
 \item{norm}{boolean value: 
@@ -26,9 +26,9 @@ Do.heuristic.methods(heuristic.fun = heuristic.fun, norm = TRUE,
 
 \item{norm.type}{can be one of the following three values: 
 \enumerate{
-    \item heuristicMAX: run the heuristic method MAX;
-    \item heuristicAND: run the heuristic method AND;
-    \item heuristicOR: run the heuristic method OR;
+\item \code{NULL} (def.): set \code{norm.type} to \code{NULL} if and only if the parameter \code{norm} is set to \code{TRUE};
+\item \code{MaxNorm}: each score is divided for the maximum of each class;
+\item \code{Qnorm}: quantile normalization. \pkg{preprocessCore} package is used. 
 }}
 
 \item{flat.file}{name of the file containing the flat scores matrix to be normalized or already normalized (without rda extension)}
@@ -63,15 +63,15 @@ the best threshold on the basis of the best F-measure}
 Five \code{rda} files stored in the rispective output directories:
 \enumerate{
 \item \code{hierarchical scores matrix}: a matrix with examples on rows and classes on columns representing the computed hierarchical scores 
-for each example and for each considered class. This file is stored in \code{hierScore.dir} directory.
-\item \code{FMM} (F-Measure Multilabel) \code{results}: \code{F-score} computed by \code{find.best.f} function. 
-Both \emph{flat} and \emph{hierarchical} results are reported. This file is stored in \code{perf.dir} directory.
-\item \code{PRC} (area under Precision-Recall Curve) \code{results}: \code{PRC} computed by \pkg{precrec} package. 
-Both \emph{flat} and \emph{hierarchical} results are reported. This file is stored in \code{perf.dir} directory.
-\item \code{AUC} (Area Under ROC Curve) \code{results}: \code{AUC} computed by \pkg{precrec} package. 
-Both \emph{flat} and \emph{hierarchical} results are reported. This file is stored in \code{perf.dir} directory.
-\item \code{PXR} (Precision at fixed Recall levels) average and per classes: \code{PXR} computed by \pkg{PerfMeas} package. 
-It is stored in \code{perf.dir} directory.
+for each class and example considered. It stored in \code{hierScore.dir} directory.
+\item \code{FMM} (F-Measure Multilabel) average and per-example: compute \code{F-score} measure by \code{find.best.f} function. 
+It stored in \code{perf.dir} directory.
+\item \code{PRC} (area under Precision-Recall Curve) average and per.class: compute \code{PRC} by \pkg{precrec} package. 
+It stored in \code{perf.dir} directory.
+\item \code{AUC} (Area Under ROC Curve) average and per-class: compute \code{AUC} by \pkg{precrec} package. 
+It stored in \code{perf.dir} directory.
+\item \code{PXR} (Precision at fixed Recall levels) average and per classes: compute \code{PXR}  by \pkg{PerfMeas} package. 
+It stored in \code{perf.dir} directory.
 }
 }
 \description{
@@ -96,10 +96,10 @@ hierScore.dir <- perf.dir <- "results/";
 dag.file <- "graph";
 flat.file <- "scores";
 ann.file <- "labels";
-Do.heuristic.methods(heuristic.fun=heuristicAND, norm=FALSE, 
-norm.type="MaxNorm", flat.file=flat.file, ann.file=ann.file, dag.file=dag.file, 
-flat.dir=flat.dir, ann.dir=ann.dir, dag.dir=dag.dir, flat.norm.dir=flat.norm.dir, 
-n.round=3, f.criterion ="F", hierScore.dir=hierScore.dir, perf.dir=perf.dir);
+Do.heuristic.methods(heuristic.fun="AND", norm=FALSE, norm.type="MaxNorm", 
+flat.file=flat.file, ann.file=ann.file, dag.file=dag.file, flat.dir=flat.dir, 
+ann.dir=ann.dir, dag.dir=dag.dir, flat.norm.dir=flat.norm.dir, n.round=3, 
+f.criterion="F", hierScore.dir=hierScore.dir, perf.dir=perf.dir);
 }
 \seealso{
 \code{\link{Heuristic-Methods}}

@@ -4,7 +4,7 @@
 \alias{Do.heuristic.methods.holdout}
 \title{Do Heuristic Methods holdout}
 \usage{
-Do.heuristic.methods.holdout(heuristic.fun = heuristic.fun, norm = TRUE,
+Do.heuristic.methods.holdout(heuristic.fun = "AND", norm = TRUE,
   norm.type = "NONE", flat.file = flat.file, ann.file = ann.file,
   dag.file = dag.file, ind.test.set = ind.test.set, ind.dir = ind.dir,
   flat.dir = flat.dir, ann.dir = ann.dir, dag.dir = dag.dir,
@@ -14,9 +14,9 @@ Do.heuristic.methods.holdout(heuristic.fun = heuristic.fun, norm = TRUE,
 \arguments{
 \item{heuristic.fun}{can be one of the following three values:
 \enumerate{
-    \item heuristicMAX: run the heuristic method MAX;
-    \item heuristicAND: run the heuristic method AND;
-    \item heuristicOR: run the heuristic method OR;
+    \item "MAX": run the heuristic method MAX;
+    \item "AND": run the heuristic method AND;
+    \item "OR": run the heuristic method OR;
 }}
 
 \item{norm}{boolean value: 
@@ -28,7 +28,7 @@ Do.heuristic.methods.holdout(heuristic.fun = heuristic.fun, norm = TRUE,
 \item{norm.type}{can be one of the following three values:
 \enumerate{
 \item \code{NONE} (def.): set \code{norm.type} to \code{NONE} if and only if the parameter \code{norm} is set to \code{TRUE};
-\item \code{MaxNorm}: each score is divided w.r.t. the max of each class;
+\item \code{MaxNorm}: each score is divided for the maximum of each class;
 \item \code{Qnorm}: quantile normalization. \pkg{preprocessCore} package is used. 
 }}
 
@@ -105,7 +105,7 @@ ind.test.set <- "test.index";
 dag.file <- "graph";
 flat.file <- "scores";
 ann.file <- "labels";
-Do.heuristic.methods.holdout(heuristic.fun=heuristicAND, norm=FALSE, 
+Do.heuristic.methods.holdout(heuristic.fun="MAX", norm=FALSE, 
 norm.type="MaxNorm", flat.file=flat.file, ann.file=ann.file, dag.file=dag.file, 
 ind.test.set=ind.test.set, ind.dir=ind.dir, flat.dir=flat.dir, ann.dir=ann.dir, 
 dag.dir=dag.dir, flat.norm.dir=flat.norm.dir, n.round=3, f.criterion="F", 

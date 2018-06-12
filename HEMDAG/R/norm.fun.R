@@ -86,13 +86,15 @@ Do.FLAT.scores.normalization <- function(norm.type="MaxNorm", flat.file=flat.fil
 	if(norm.type=="MaxNorm"){
 		## Max Normalization
 		S <- normalize.max(S);		
-	}else{
+	}else if(norm.type=="Qnorm"){
 		## Quantile Normalization 
 		## NOTE: normalize.quantiles function returns a unnamed matrix. colnames are essential for hier.corr..
 		S.norm <- normalize.quantiles(S);
 		dimnames(S.norm) <- list(rownames(S),colnames(S));
 		S <- S.norm;
 		rm(S.norm);	
+	}else{
+		stop("The chosen normalization method is not among those available or it was misspelled");
 	}
 
 	## Storing results

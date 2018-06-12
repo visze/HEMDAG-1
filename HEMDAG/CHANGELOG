@@ -1,15 +1,48 @@
-HEMDAG 1.1.1
+HEMDAG 2.0.0
 ---------------------------------------------------------------------
-
 NEW FEATURES
-* Added DESCENS algorithm
-* Added Heuristic Methods MAX, AND, OR (Obozinski et al., Genome Biology, 2008)
-* Added tupla.matrix function
+* Added TPR-DAG: function gathering several hierarchical ensemble variants;
+* Added Do.TPR.DAG: high-level function to run TPR-DAG cross-validation experiments;
+* The following TPR-DAG and DESCENS high-level functions were removed:
+	Do.tpr.threshold.free;
+	Do.tpr.threshold.cv;
+	Do.tpr.weighted.threshold.free.cv;
+	Do.tpr.weighted.threshold.cv;
+	Do.descens.threshold.free;
+	Do.descens.threshold.cv;
+	Do.descens.weighted.threshold.free.cv,;
+	Do.descens.tau.cv;
+	Do.descens.weighted.threshold.cv;
+	NOTE: all the removed functions can be run opportunely setting the input parameters 
+	of the new high-level function 'Do.TPR.DAG';
+* Added Do.TPR.DAG.holdout: high-level functions to run TPR-DAG holdout experiments;
+* The following TPR-DAG and DESCENS high-level functions were removed:
+	Do.tpr.threshold.free.holdout;
+	Do.tpr.threshold.holdout;
+	Do.tpr.weighted.threshold.free.holdout;
+	Do.tpr.weighted.threshold.holdout;
+	Do.descens.threshold.free.holdout;
+	Do.descens.threshold.holdout;
+	Do.descens.weighted.threshold.free.holdout;
+	Do.descens.tau.holdout;
+	Do.descens.weighted.threshold.holdout;
+	NOTE: all the removed functions can be run opportunely setting the input parameters
+	of the new high level function 'Do.TPR.DAG.holdout';
 
 CHANGES
-* Improved Manual
-* Added link to the GitHub repository HPOparser
-* Added CITATION file
+* Improved Manual;
+	
+HEMDAG 1.1.1
+---------------------------------------------------------------------
+NEW FEATURES
+* Added DESCENS algorithm;
+* Added Heuristic Methods MAX, AND, OR (Obozinski et al., Genome Biology, 2008);
+* Added tupla.matrix function;
+
+CHANGES
+* Improved Manual;
+* Added link to the GitHub repository HPOparser;
+* Added CITATION file;
 
 HEMDAG 1.0.0
 ---------------------------------------------------------------------

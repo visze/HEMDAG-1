@@ -540,7 +540,7 @@ specific.annotation.matrix <- function(file="gene2pheno.txt", genename="TRUE"){
 	for(i in 1:length(tmp)) gene.names <- c(gene.names,tmp[[i]][1]);
 
 	ann.list <- list();
-	for(i in 1:length(tmp)) ann.list[[i]] <- tmp[[i]][-1];
+	for(i in 1:length(tmp)) ann.list[[i]] <- unique(tmp[[i]])[-1];
 	names(ann.list) <- gene.names;
 
 	hpoID <- unique(unlist(ann.list));

@@ -17,7 +17,7 @@ descens.weighted.threshold.free(S, g, root = "00", w = 0.5)
 
 descens.weighted.threshold(S, g, root = "00", t = 0.5, w = 0.5)
 
-descens.tau(S, g, tau = 0.5, root = "00")
+descens.tau(S, g, root = "00", t = 0.5)
 }
 \arguments{
 \item{S}{a named flat scores matrix with examples on rows and classes on columns}
@@ -26,12 +26,11 @@ descens.tau(S, g, tau = 0.5, root = "00")
 
 \item{root}{name of the class that it is on the top-level of the hierarchy (def. \code{root="00"})}
 
-\item{t}{threshold for the choice of positive children (def. \code{t=0.5})}
-
-\item{w}{weight to balance between the contribution of the node \eqn{i} and that of its positive children}
-
-\item{tau}{weight \eqn{tau} to balance the contribution between the positives children of a node \eqn{i} and that of its
+\item{t}{threshold for the choice of the positive descendants (def. \code{t=0.5}); whereas in the \code{descens.tau} variant 
+the parameter \code{t} balances the contribution between the positives children of a node \eqn{i} and that of its
 positives descendants excluding the positives children}
+
+\item{w}{weight to balance between the contribution of the node \eqn{i} and that of its positive descendants}
 }
 \value{
 a named matrix with the scores of the classes corrected according to the DESCENS algorithm.
@@ -39,7 +38,7 @@ a named matrix with the scores of the classes corrected according to the DESCENS
 \description{
 The novelty of DESCENS with respect to TPR-DAG algorithm consists in considering the contribution of all the descendants 
 of each node instead of only that of its children, since with the TPR-DAG algorithm the contribution of the descendants of a given node 
-decays exponentially with their distance from the node itself, reducing the impact of the predictions made at the most specific levels of the ontology. 
+decays exponentially with their distance from the node itself, thus reducing the impact of the predictions made at the most specific levels of the ontology. 
 On the contrary DESCENS predictions are more influenced by the information embedded in the most specific terms of the taxonomy (e.g. leaf nodes), 
 thus putting more emphasis on the terms that most characterize the gene under study.
 }
@@ -96,5 +95,8 @@ S.descensTF <- descens.threshold.free(S,g,root);
 S.descensT <- descens.threshold(S,g,root,t=0.5);
 S.descensW <- descens.weighted.threshold.free(S,g,root,w=0.5);
 S.descensWT <- descens.weighted.threshold(S,g,root,w=0.5, t=0.5);
-S.descensTAU <- descens.tau(S,g,root, tau=0.5);
+S.descensTAU <- descens.tau(S,g,root, t=0.5);
+}
+\seealso{
+\code{\link{TPR-DAG}}
 }

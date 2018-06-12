@@ -104,9 +104,9 @@ heuristicOR <- function(S, g, root="00"){
 #' Genome Biology, 2008})
 #' @param heuristic.fun can be one of the following three values:
 #' \enumerate{
-#' 	\item heuristicMAX: run the MAX heuristic method;
-#' 	\item heuristicAND: run theAND heuristic method;
-#' 	\item heuristicOR: run theOR heuristic method;
+#' 	\item "MAX": run the heuristic method MAX;
+#' 	\item "AND": run the heuristic method AND;
+#' 	\item "OR": run the heuristic method OR;
 #' }
 #' @param norm boolean value: 
 #' \itemize{
@@ -114,11 +114,11 @@ heuristicOR <- function(S, g, root="00"){
 #' \item \code{FALSE}: the flat scores matrix has not been normalized yet. See the parameter \code{norm.type} for which normalization can be applied.
 #' }
 #' @param norm.type can be one of the following three values: 
-#' \enumerate{
-#' 	\item heuristicMAX: run the heuristic method MAX;
-#' 	\item heuristicAND: run the heuristic method AND;
-#' 	\item heuristicOR: run the heuristic method OR;
-#' }
+#'  \enumerate{
+#'  \item \code{NULL} (def.): set \code{norm.type} to \code{NULL} if and only if the parameter \code{norm} is set to \code{TRUE};
+#'  \item \code{MaxNorm}: each score is divided for the maximum of each class;
+#'  \item \code{Qnorm}: quantile normalization. \pkg{preprocessCore} package is used. 
+#'  }
 #' @param flat.file name of the file containing the flat scores matrix to be normalized or already normalized (without rda extension)
 #' @param ann.file name of the file containing the the label matrix of the examples (without rda extension)
 #' @param dag.file name of the file containing the graph that represents the hierarchy of the classes (without rda extension)
@@ -139,15 +139,15 @@ heuristicOR <- function(S, g, root="00"){
 #' @return Five \code{rda} files stored in the rispective output directories:
 #' \enumerate{
 #' \item \code{hierarchical scores matrix}: a matrix with examples on rows and classes on columns representing the computed hierarchical scores 
-#' for each example and for each considered class. This file is stored in \code{hierScore.dir} directory.
-#' \item \code{FMM} (F-Measure Multilabel) \code{results}: \code{F-score} computed by \code{find.best.f} function. 
-#' Both \emph{flat} and \emph{hierarchical} results are reported. This file is stored in \code{perf.dir} directory.
-#' \item \code{PRC} (area under Precision-Recall Curve) \code{results}: \code{PRC} computed by \pkg{precrec} package. 
-#' Both \emph{flat} and \emph{hierarchical} results are reported. This file is stored in \code{perf.dir} directory.
-#' \item \code{AUC} (Area Under ROC Curve) \code{results}: \code{AUC} computed by \pkg{precrec} package. 
-#' Both \emph{flat} and \emph{hierarchical} results are reported. This file is stored in \code{perf.dir} directory.
-#' \item \code{PXR} (Precision at fixed Recall levels) average and per classes: \code{PXR} computed by \pkg{PerfMeas} package. 
-#' It is stored in \code{perf.dir} directory.
+#' for each class and example considered. It stored in \code{hierScore.dir} directory.
+#' \item \code{FMM} (F-Measure Multilabel) average and per-example: compute \code{F-score} measure by \code{find.best.f} function. 
+#' It stored in \code{perf.dir} directory.
+#' \item \code{PRC} (area under Precision-Recall Curve) average and per.class: compute \code{PRC} by \pkg{precrec} package. 
+#' It stored in \code{perf.dir} directory.
+#' \item \code{AUC} (Area Under ROC Curve) average and per-class: compute \code{AUC} by \pkg{precrec} package. 
+#' It stored in \code{perf.dir} directory.
+#' \item \code{PXR} (Precision at fixed Recall levels) average and per classes: compute \code{PXR}  by \pkg{PerfMeas} package. 
+#' It stored in \code{perf.dir} directory.
 #' }
 #' @export
 #' @examples
@@ -168,13 +168,24 @@ heuristicOR <- function(S, g, root="00"){
 #' dag.file <- "graph";
 #' flat.file <- "scores";
 #' ann.file <- "labels";
-#' Do.heuristic.methods(heuristic.fun=heuristicAND, norm=FALSE, 
-#' norm.type="MaxNorm", flat.file=flat.file, ann.file=ann.file, dag.file=dag.file, 
-#' flat.dir=flat.dir, ann.dir=ann.dir, dag.dir=dag.dir, flat.norm.dir=flat.norm.dir, 
-#' n.round=3, f.criterion ="F", hierScore.dir=hierScore.dir, perf.dir=perf.dir);
-Do.heuristic.methods <- function(heuristic.fun=heuristic.fun, norm=TRUE, norm.type= "NONE", flat.file=flat.file, 
+#' Do.heuristic.methods(heuristic.fun="AND", norm=FALSE, norm.type="MaxNorm", 
+#' flat.file=flat.file, ann.file=ann.file, dag.file=dag.file, flat.dir=flat.dir, 
+#' ann.dir=ann.dir, dag.dir=dag.dir, flat.norm.dir=flat.norm.dir, n.round=3, 
+#' f.criterion="F", hierScore.dir=hierScore.dir, perf.dir=perf.dir);
+Do.heuristic.methods <- function(heuristic.fun="AND", norm=TRUE, norm.type= "NONE", flat.file=flat.file, 
 	ann.file=ann.file, dag.file=dag.file, flat.dir=flat.dir, ann.dir=ann.dir, dag.dir=dag.dir, flat.norm.dir=NULL, n.round=3, 
-	f.criterion ="F", hierScore.dir=hierScore.dir, perf.dir=perf.dir){
+	f.criterion="F", hierScore.dir=hierScore.dir, perf.dir=perf.dir){
+
+	## Setting Check
+	if(heuristic.fun!="MAX" && heuristic.fun!="AND" && heuristic.fun!="OR"){
+		stop("The chosen heuristic method is not among those available or it was misspelled");
+	}
+	if(norm==FALSE && length(norm.type)==0){
+		stop("If norm is set to FALSE, you need also to specify a normalization method among those available");
+	}
+	if(norm==TRUE && length(norm.type)!=0){
+		stop("If norm is set to TRUE, the input flat matrix is already normalized. Set norm.type' to NULL (without quote)");
+	}
 
 	## Loading Data ############
 	## loading dag
@@ -222,9 +233,15 @@ Do.heuristic.methods <- function(heuristic.fun=heuristic.fun, norm=TRUE, norm.ty
 	PRC.flat <- AUPRC.single.over.classes(ann, S); gc();
 
 	## Obozinski's Hierarchical Heuristic Methods ####################
-	S <- heuristic.fun(S, g, root);
+	if(heuristic.fun=="AND"){
+		S <- heuristicAND(S, g, root);
+	}else if(heuristic.fun=="MAX"){
+		S <- heuristicMAX(S, g, root);
+	}else if(heuristic.fun=="OR"){
+		S <- heuristicOR(S, g, root);
+	}
 	
-	## Computing Hier Performances
+	## Computing Hierarchical Performances
 	## Hierarchical AUC (average and per.class) computed by precrec package
 	AUC.hier <- AUROC.single.over.classes(ann, S); gc();
 
@@ -242,7 +259,13 @@ Do.heuristic.methods <- function(heuristic.fun=heuristic.fun, norm=TRUE, norm.ty
 	rm(S); gc();
 
 	## Storing Results #########
-	heuristic.name <- as.character(substitute(heuristic.fun));
+	if(heuristic.fun=="AND"){
+		heuristic.name <- "AND";
+	}else if(heuristic.fun=="MAX"){
+		heuristic.name <- "MAX";
+	}else if(heuristic.fun=="OR"){
+		heuristic.name <- "OR";
+	}
 	if(norm){
 		save(S.hier, file=paste0(hierScore.dir, flat.file, ".hierScores",heuristic.name,".rda"), compress=TRUE);
 		save(AUC.flat, AUC.hier, file=paste0(perf.dir, "AUC.", flat.file, ".hierScores.",heuristic.name,".rda"), compress=TRUE);
@@ -263,9 +286,9 @@ Do.heuristic.methods <- function(heuristic.fun=heuristic.fun, norm=TRUE, norm.ty
 #' Genome Biology, 2008}) applying a classical holdout procedure
 #' @param heuristic.fun can be one of the following three values:
 #' \enumerate{
-#' 	\item heuristicMAX: run the heuristic method MAX;
-#' 	\item heuristicAND: run the heuristic method AND;
-#' 	\item heuristicOR: run the heuristic method OR;
+#' 	\item "MAX": run the heuristic method MAX;
+#' 	\item "AND": run the heuristic method AND;
+#' 	\item "OR": run the heuristic method OR;
 #' }
 #' @param norm boolean value: 
 #' \itemize{
@@ -275,7 +298,7 @@ Do.heuristic.methods <- function(heuristic.fun=heuristic.fun, norm=TRUE, norm.ty
 #' @param norm.type can be one of the following three values:
 #'  \enumerate{
 #'  \item \code{NONE} (def.): set \code{norm.type} to \code{NONE} if and only if the parameter \code{norm} is set to \code{TRUE};
-#'  \item \code{MaxNorm}: each score is divided w.r.t. the max of each class;
+#'  \item \code{MaxNorm}: each score is divided for the maximum of each class;
 #'  \item \code{Qnorm}: quantile normalization. \pkg{preprocessCore} package is used. 
 #'  }
 #' @param flat.file name of the file containing the flat scores matrix to be normalized or already normalized (without rda extension)
@@ -333,15 +356,26 @@ Do.heuristic.methods <- function(heuristic.fun=heuristic.fun, norm=TRUE, norm.ty
 #' dag.file <- "graph";
 #' flat.file <- "scores";
 #' ann.file <- "labels";
-#' Do.heuristic.methods.holdout(heuristic.fun=heuristicAND, norm=FALSE, 
+#' Do.heuristic.methods.holdout(heuristic.fun="MAX", norm=FALSE, 
 #' norm.type="MaxNorm", flat.file=flat.file, ann.file=ann.file, dag.file=dag.file, 
 #' ind.test.set=ind.test.set, ind.dir=ind.dir, flat.dir=flat.dir, ann.dir=ann.dir, 
 #' dag.dir=dag.dir, flat.norm.dir=flat.norm.dir, n.round=3, f.criterion="F", 
 #' hierScore.dir=hierScore.dir, perf.dir=perf.dir);
-Do.heuristic.methods.holdout <- function(heuristic.fun=heuristic.fun, norm=TRUE, norm.type= "NONE", flat.file=flat.file, 
+Do.heuristic.methods.holdout <- function(heuristic.fun="AND", norm=TRUE, norm.type= "NONE", flat.file=flat.file, 
 	ann.file=ann.file, dag.file=dag.file, ind.test.set=ind.test.set, ind.dir=ind.dir, flat.dir=flat.dir, ann.dir=ann.dir, 
 	dag.dir=dag.dir, flat.norm.dir=NULL, n.round=3, f.criterion ="F", hierScore.dir=hierScore.dir, perf.dir=perf.dir){
 
+	## Setting Check
+	if(heuristic.fun!="MAX" && heuristic.fun!="AND" && heuristic.fun!="OR"){
+		stop("The chosen heuristic method is not among those available or it was misspelled");
+	}
+	if(norm==FALSE && length(norm.type)==0){
+		stop("If norm is set to FALSE, you need also to specify a normalization method among those available")
+	}
+	if(norm==TRUE && length(norm.type)!=0){
+		stop("If norm is set to TRUE, the input flat matrix is already normalized. Set norm.type' to NULL (without quote)")
+	}
+	
 	## Loading Data ############
 	# loading examples indices of the test set
 	ind.set <- paste0(ind.dir, ind.test.set, ".rda");
@@ -395,7 +429,13 @@ Do.heuristic.methods.holdout <- function(heuristic.fun=heuristic.fun, norm=TRUE,
 	PRC.flat <- AUPRC.single.over.classes(ann, S);  
 
 	## Obozinski's Hierarchical Heuristic Methods ####################
-	S <- heuristic.fun(S, g, root);
+	if(heuristic.fun=="AND"){
+		S <- heuristicAND(S, g, root);
+	}else if(heuristic.fun=="MAX"){
+		S <- heuristicMAX(S, g, root);
+	}else if(heuristic.fun=="OR"){
+		S <- heuristicOR(S, g, root);
+	}
 	
 	## Computing Hier Performances
 	## Hierarchical AUC (average and per.class) computed by precrec package
@@ -415,7 +455,13 @@ Do.heuristic.methods.holdout <- function(heuristic.fun=heuristic.fun, norm=TRUE,
 	rm(S); gc();
 	
 	## Storing Results #########
-	heuristic.name <- as.character(substitute(heuristic.fun));
+	if(heuristic.fun=="AND"){
+		heuristic.name <- "AND";
+	}else if(heuristic.fun=="MAX"){
+		heuristic.name <- "MAX";
+	}else if(heuristic.fun=="OR"){
+		heuristic.name <- "OR";
+	}
 	if(norm){
 		save(S.hier, file=paste0(hierScore.dir, flat.file, ".hierScores",heuristic.name,".holdout.rda"), compress=TRUE);
 		save(AUC.flat, AUC.hier, file=paste0(perf.dir, "AUC.", flat.file, ".hierScores.",heuristic.name,".holdout.rda"), compress=TRUE);

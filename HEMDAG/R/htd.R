@@ -30,7 +30,7 @@
 #' data(scores);
 #' root <- root.node(g);
 #' S.htd <- htd(S,g,root);
-htd <- function(S,g, root="00"){
+htd <- function(S, g, root="00"){
 	levels <- graph.levels(g,root);
 	# a dummy root is added
 	if(!(root %in% colnames(S))){
@@ -71,8 +71,8 @@ htd <- function(S,g, root="00"){
 #' }
 #' @param norm.type can be one of the following three values:
 #'  \enumerate{
-#'  \item \code{NONE} (def.): set \code{norm.type} to \code{NONE} if and only if the parameter \code{norm} is set to \code{TRUE};
-#'  \item \code{MaxNorm}: each score is divided w.r.t. the max of each class;
+#'  \item \code{NULL} (def.): set \code{norm.type} to \code{NULL} if and only if the parameter \code{norm} is set to \code{TRUE};
+#'  \item \code{MaxNorm}: each score is divided for the maximum of each class;
 #'  \item \code{Qnorm}: quantile normalization. \pkg{preprocessCore} package is used. 
 #'  }
 #' @param flat.file name of the file containing the flat scores matrix to be normalized or already normalized (without rda extension)
@@ -125,13 +125,21 @@ htd <- function(S,g, root="00"){
 #' dag.file <- "graph";
 #' flat.file <- "scores";
 #' ann.file <- "labels";
-#' Do.HTD(norm=FALSE, norm.type= "MaxNorm", flat.file=flat.file, ann.file=ann.file, 
+#' Do.HTD(norm=FALSE, norm.type="MaxNorm", flat.file=flat.file, ann.file=ann.file, 
 #' dag.file=dag.file, flat.dir=flat.dir, ann.dir=ann.dir, dag.dir=dag.dir, 
 #' flat.norm.dir=flat.norm.dir, n.round=3, f.criterion ="F", hierScore.dir=hierScore.dir, 
 #' perf.dir=perf.dir);
-Do.HTD <- function(norm=TRUE, norm.type= "NONE", flat.file=flat.file, ann.file=ann.file, dag.file=dag.file, flat.dir=flat.dir, 
+Do.HTD <- function(norm=TRUE, norm.type=NULL, flat.file=flat.file, ann.file=ann.file, dag.file=dag.file, flat.dir=flat.dir, 
 	ann.dir=ann.dir, dag.dir=dag.dir, flat.norm.dir=NULL, n.round=3, f.criterion ="F", hierScore.dir=hierScore.dir, perf.dir=perf.dir){
 	
+	## Setting Check
+	if(norm==FALSE && length(norm.type)==0){
+		stop("If norm is set to FALSE, you need also to specify a normalization method among those available")
+	}
+	if(norm==TRUE && length(norm.type)!=0){
+		stop("If norm is set to TRUE, the input flat matrix is already normalized. Set norm.type' to NULL (without quote)")
+	}
+
 	## Loading Data ############
 	## loading dag
 	dag.path <- paste0(dag.dir, dag.file,".rda");
@@ -225,8 +233,8 @@ Do.HTD <- function(norm=TRUE, norm.type= "NONE", flat.file=flat.file, ann.file=a
 #' }
 #' @param norm.type can be one of the following three values:
 #'  \enumerate{
-#'  \item \code{NONE} (def.): set \code{norm.type} to \code{NONE} if and only if the parameter \code{norm} is set to \code{TRUE};
-#'  \item \code{MaxNorm}: each score is divided w.r.t. the max of each class;
+#'  \item \code{NULL} (def.): set \code{norm.type} to \code{NULL} if and only if the parameter \code{norm} is set to \code{TRUE};
+#'  \item \code{MaxNorm}: each score is divided for the maximum of each class;
 #'  \item \code{Qnorm}: quantile normalization. \pkg{preprocessCore} package is used. 
 #'  }
 #' @param flat.file name of the file containing the flat scores matrix to be normalized or already normalized (without rda extension)
@@ -285,14 +293,22 @@ Do.HTD <- function(norm=TRUE, norm.type= "NONE", flat.file=flat.file, ann.file=a
 #' dag.file <- "graph";
 #' flat.file <- "scores";
 #' ann.file <- "labels";
-#' Do.HTD.holdout(norm=FALSE, norm.type= "MaxNorm", flat.file=flat.file, ann.file=ann.file, 
+#' Do.HTD.holdout(norm=FALSE, norm.type="MaxNorm", flat.file=flat.file, ann.file=ann.file, 
 #' dag.file=dag.file, ind.test.set=ind.test.set, ind.dir=ind.dir, flat.dir=flat.dir, 
 #' ann.dir=ann.dir, dag.dir=dag.dir, flat.norm.dir=flat.norm.dir, n.round=3, f.criterion ="F", 
 #' hierScore.dir=hierScore.dir, perf.dir=perf.dir);
-Do.HTD.holdout <- function(norm=TRUE, norm.type= "NONE", flat.file=flat.file, ann.file=ann.file, dag.file=dag.file, 
+Do.HTD.holdout <- function(norm=TRUE, norm.type=NULL, flat.file=flat.file, ann.file=ann.file, dag.file=dag.file, 
 	ind.test.set=ind.test.set, ind.dir=ind.dir, flat.dir=flat.dir, ann.dir=ann.dir, dag.dir=dag.dir, flat.norm.dir=NULL, 
 	n.round=3, f.criterion ="F", hierScore.dir=hierScore.dir, perf.dir=perf.dir){
-
+	
+	## Setting Check
+	if(norm==FALSE && length(norm.type)==0){
+		stop("If norm is set to FALSE, you need also to specify a normalization method among those available")
+	}
+	if(norm==TRUE && length(norm.type)!=0){
+		stop("If norm is set to TRUE, the input flat matrix is already normalized. Set norm.type' to NULL (without quote)")
+	}
+	
 	## Loading Data ############
 	# loading examples indices of the test set
 	ind.set <- paste0(ind.dir, ind.test.set, ".rda");
