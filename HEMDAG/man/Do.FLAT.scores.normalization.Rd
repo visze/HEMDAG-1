@@ -11,7 +11,7 @@ Do.FLAT.scores.normalization(norm.type = "MaxNorm", flat.file = flat.file,
 \arguments{
 \item{norm.type}{can be one of the following two values:
 \itemize{
-\item MaxNorm: each score is divided w.r.t. the max of each class;
+\item MaxNorm (\code{def.}): each score is divided w.r.t. the max of each class;
 \item Qnorm: a quantile normalization is applied. Library preprocessCore is used.
 }}
 

@@ -1026,37 +1026,42 @@ do.unstratified.cv.data <- function(S, kk=5, seed=NULL){
 #' @export
 do.stratified.cv.data.single.class <- function(examples, positives, kk=5, seed=NULL){
 	set.seed(seed);
-
 	if(is.numeric(examples) && length(names(positives))!=0){
 		positives <- unname(positives);
 	}
-
 	if(is.character(examples) && length(names(positives))!=0){
 		positives <- names(positives);
 	}
-
-	negatives <- setdiff(examples,positives); 	
+	if(length(positives)==1){
+		positives <- positives;
+	}else{
+		positives <- sample(positives);
+	}
+	negatives <- setdiff(examples,positives);
+	negatives <- sample(negatives);
 	n <- length(positives);		
 	m <- length(negatives);		
 	set.pos <- list();
 	set.neg <- list();
-
 	for (k in 1:kk) {
-		#fold positives 
+		## folds of indices of positive examples 
 		last.pos <- (k * n) %/% kk;
 		first.pos  <- ((k - 1) * n) %/% kk;
-		size.pos <-  last.pos - first.pos;				
-		subset.pos <- 	sample(positives, size.pos);			
-		set.pos[[k]] <- subset.pos;						
-		positives <- setdiff(positives, subset.pos);	
-		
-		#fold non positives
+		size.pos <-  last.pos - first.pos;
+		if(size.pos>1){subset.pos <- positives[1:size.pos];}
+		if(size.pos==1){subset.pos <- positives[size.pos];}
+		if(size.pos==0){subset.pos <- integer(0);}
+		set.pos[[k]] <- subset.pos;
+		positives <- setdiff(positives, subset.pos);
+		## folds of indices of negatives examples
 		last.neg <- (k * m) %/% kk;
 		first.neg  <- ((k - 1) * m) %/% kk;
-		size.neg <-  last.neg - first.neg;				
-		subset.neg <- sample(negatives, size.neg);					
-		set.neg[[k]] <- subset.neg;						
-		negatives <- setdiff(negatives, subset.neg);	
+		size.neg <-  last.neg - first.neg;	
+		if(size.neg>1){subset.neg <- negatives[1:size.neg];}
+		if(size.neg==1){subset.neg <- negatives[size.neg];}
+		if(size.neg==0){subset.neg <- integer(0);}
+		set.neg[[k]] <- subset.neg;
+		negatives <- setdiff(negatives, subset.neg);
 	}
 	return(list(fold.positives=set.pos, fold.negatives=set.neg));
 }

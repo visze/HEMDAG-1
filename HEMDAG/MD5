@@ -1,13 +1,13 @@
-15cfe7cb0ad52b3f59745f6a8cd7f830 *CHANGELOG
-c4e3ec986c99d57dcc22b73b6664e04e *DESCRIPTION
+ddadbe41a963be3be9583e98ad1b716d *CHANGELOG
+6f687f84ac76542287c75cb8eb318ce3 *DESCRIPTION
 919e2eaaaccbeb2c7e6e4421251fd9f8 *NAMESPACE
 8a2b88883c43d035b2a91bba133cdb53 *R/IO.fun.R
 8019c27e1ff66909472d8be8c9021a06 *R/TPR-DAG.R
 655fb0f7856df9c5c62676a62f2becf8 *R/descens.R
-49f8d6f12f1cfedb3892fc48db80b287 *R/graph.utility.R
+5f066c00b0b782fad90e20984d005027 *R/graph.utility.R
 842b42ad62d6c922c1efcdaa2807d88b *R/heuristic.methods.R
 e3b352aeb1c4cb9e88bab8cac315acac *R/htd.R
-e5d2a2d1d4b0e684143f3b5f6047c0fa *R/norm.fun.R
+d0a4a3a13444f3fa8ad95810e7a6685f *R/norm.fun.R
 bf0fd5eaa99a7b6f3c4cfbd3cd27042e *R/perf.meas.R
 309dc136f7f74ca4129233e5a08cf6bf *R/pkg.attach.R
 bfbfb17058c13215cca1bc69475e54e9 *R/pkg.import.R
@@ -18,7 +18,7 @@ b38c67e9118b338a34a4f67284fed863 *data/scores.rda
 8a1a6c2671b3af583bf39bc32c10698d *data/test.index.rda
 a6784be6fba1850db1a693ecd6b44e17 *data/wadj.rda
 231deecd6cdc3aaf9c031bcf8e8ee443 *inst/CITATION
-c49db4ad60753d33afba4eb8b27e849f *inst/doc/HEMDAG.pdf
+c229d09e3eebf780004c4803c7437b43 *inst/doc/HEMDAG.pdf
 b1bbec7b5b69b547e88c35424c84bf08 *inst/extdata/edges.txt
 ef5e0e6edf805661dfea5c69f21e5366 *inst/extdata/gene2pheno.txt
 e5a3e547e99f7b46cfea5849094ebbb9 *inst/extdata/graph.edges.txt
@@ -27,7 +27,7 @@ d36160c1c571fa9b27f55592677fbaf4 *man/AUPRC.single.over.classes.Rd
 fdc5bd88128aca875f7eef43272afe29 *man/AUROC.single.class.Rd
 85342660e8ac60ba68fe5af0ffa12b89 *man/AUROC.single.over.classes.Rd
 55af4d185311e3df86f62565ddec5335 *man/DESCENS.Rd
-637b0d3783b521d1a26db528aa8b2361 *man/Do.FLAT.scores.normalization.Rd
+67cdc30206210fa408e1ba02573c51bf *man/Do.FLAT.scores.normalization.Rd
 9656ce51763cb7c4b36dc87e53cdd560 *man/Do.HTD.Rd
 54cebf638c403cb247da6f32d51a4fb6 *man/Do.HTD.holdout.Rd
 4552a0c86406fcf3dd749e82cf958ed6 *man/Do.full.annotation.matrix.Rd
